@@ -1,23 +1,34 @@
-import { useState , useEffect} from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
+
+import { useState , useEffect} from 'react'
 import './App.css'
 import axios from 'axios'
 
 function App() {
-  const [count, setCount] = useState(0);
-  const [array, setArray] = useState([]);
-
-  const fetchAPI = async () => {
+  const [rows, setRows] = useState([]);
+  const [input, setInput] = useState("");
+  
+  const fetchDATA = async () => {
     const response = await axios.get("http://localhost:8080/api");
-    setArray(response.data.fruits);
-    console.log(response.data.fruits);
+    setRows(response.data);
+    console.log(response.data);
   }
 
   useEffect(() => {
-    fetchAPI();
+    fetchDATA();
   },[]);
 
+  const handleInsert = async () => {
+    if (!input.trim()) return;
+    try {
+      await axios.post("http://localhost:8080/api", { name: input });
+      setInput("");      // clear input
+      fetchDATA();       // refresh list
+    } catch (error) {
+      console.error("Error inserting data:", error);
+    }
+  };
 
   return (
     <>
@@ -29,28 +40,18 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-
-        {/* test api */}
-        {
-          array.map((fruit, index) => (
-            <div key={index}>
-              <p>{fruit}</p>
-              <br />
-            </div>
-          ))
-        }
+      <div>
+        <h1>Data from MySQL</h1>
+          <ul>
+            {rows.map((row) => (
+              <li key={row.id}>{row.name}</li>
+            ))}
+          </ul>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <div>
+        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder='input'/>
+        <button type="button" onClick={handleInsert} >Try</button>
+      </div>
     </>
   )
 }
