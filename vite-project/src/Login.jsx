@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function Login() {
   const [reminder, setReminder] = useState("");
+  const navigate = useNavigate(); // hook for navigation
 
   const handleLoginClick = async () => {
     const uname = document.querySelector(".user"); 
@@ -13,9 +15,9 @@ function Login() {
     if (unameInput === "") {
       setReminder("Username cannot be empty.");
       return;
-    } else if (pwordInput === ""){
-        setReminder("Password cannot be empty.");
-        return;
+    } else if (pwordInput === "") {
+      setReminder("Password cannot be empty.");
+      return;
     }
 
     try {
@@ -26,6 +28,7 @@ function Login() {
 
       if (response.data.success) {
         setReminder("Login success!");
+        navigate("/home"); // redirect to Home page
       } else {
         setReminder("Invalid username or password");
       }
@@ -45,7 +48,9 @@ function Login() {
           <input className="user" type="text" required placeholder="Username" />
           <h6>Password</h6>
           <input className="pw" type="password" required placeholder="Password"/><br />
-          <button type="submit" className="bg-blue-100" onClick={handleLoginClick}>Log in</button> <br />
+          <button type="submit" className="bg-blue-100" onClick={handleLoginClick}>
+            Log in
+          </button> <br />
           <a href="#">Forgot Password</a>
         </div>
         <div className="login-signup">
