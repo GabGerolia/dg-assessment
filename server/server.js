@@ -26,32 +26,65 @@ db.connect((err) => {
 });
 
 
-app.get("/api", (req, res) => {
-  db.query("SELECT * FROM test", (err, results) => {
-    if (err) {
-      console.error("Error fetching data:", err);
-      res.status(500).json({ error: "Database error" });
-    } else {
-      res.json(results);
-    }
-  });
-});
+//fetch login info
+app.post("/api/login", (req, res) => {
+  const { username, password } = req.body;
 
-app.post("/api", (req, res) => {
-  const { name } = req.body;
-  if (!name) {
-    return res.status(400).json({ error: "Name is required" });
+  if (!username) {
+    return res.status(400).json({ error: "Username is required" });
+  } else if(!password){
+    return res.status(400).json({ error: "Password is required"});
   }
 
-  db.query("INSERT INTO test (name) VALUES (?)", [name], (err, result) => {
-    if (err) {
-      console.error("Error inserting data:", err);
-      res.status(500).json({ error: "Database error" });
-    } else {
-      res.json({ id: result.insertId, name });
+  db.query(
+    "SELECT * FROM test WHERE userName = ? AND password = ?",
+    [username, password],
+    (err, results) => {
+      if (err) {
+        console.error("Error checking user:", err);
+        return res.status(500).json({ error: "Database error" });
+      }
+
+      if (results.length > 0) {
+        // username exists
+        res.json({ success: true, message: "Username found" });
+      } else {
+        // username not found
+        res.json({ success: false, message: "Invalid username" });
+      }
     }
-  });
+  );
 });
+
+
+// // fetch all data to 8080/api
+// app.get("/api", (req, res) => {
+//   db.query("SELECT * FROM test", (err, results) => {
+//     if (err) {
+//       console.error("Error fetching data:", err);
+//       res.status(500).json({ error: "Database error" });
+//     } else {
+//       res.json(results);
+//     }
+//   });
+// });
+
+// // test insert
+// app.post("/api", (req, res) => {
+//   const { name } = req.body;
+//   if (!name) {
+//     return res.status(400).json({ error: "Name is required" });
+//   }
+
+//   db.query("INSERT INTO test (name) VALUES (?)", [name], (err, result) => {
+//     if (err) {
+//       console.error("Error inserting data:", err);
+//       res.status(500).json({ error: "Database error" });
+//     } else {
+//       res.json({ id: result.insertId, name });
+//     }
+//   });
+// });
 
 app.listen(8080, () => {
   console.log("Server started on port 8080");
