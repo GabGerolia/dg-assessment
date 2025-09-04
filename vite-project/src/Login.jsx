@@ -44,14 +44,14 @@ function Login() {
       setReminder("Server error.");
     }
   };
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 via-white to-blue-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">LOGIN</h1>
+ return (
+    <div className="flex items-center justify-center min-h-screen bg-[var(--bg-dark)] px-4">
+      <div className="w-full max-w-md bg-[var(--bg)] text-[var(--text)] rounded-2xl shadow-lg p-8 border border-[var(--border)]">
+        <h1 className="text-3xl font-bold text-center mb-6">LOGIN</h1>
 
         {/* Reminder/Error message */}
         {reminder && (
-          <div className="mb-4 text-center text-sm font-medium text-red-600">
+          <div className="mb-4 text-center text-sm font-medium text-[var(--danger)]">
             {reminder}
           </div>
         )}
@@ -59,9 +59,11 @@ function Login() {
         <div className="space-y-4">
           {/* Username */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Username</label>
+            <label className="block font-medium mb-1 text-[var(--text-muted)]">
+              Username
+            </label>
             <input
-              className="user w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="user w-full border border-[var(--border)] rounded-lg px-4 py-2 bg-[var(--bg-light)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
               type="text"
               required
               placeholder="Enter your username"
@@ -70,9 +72,11 @@ function Login() {
 
           {/* Password */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Password</label>
+            <label className="block font-medium mb-1 text-[var(--text-muted)]">
+              Password
+            </label>
             <input
-              className="pw w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="pw w-full border border-[var(--border)] rounded-lg px-4 py-2 bg-[var(--bg-light)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
               type="password"
               required
               placeholder="Enter your password"
@@ -83,7 +87,7 @@ function Login() {
           <button
             type="submit"
             onClick={handleLoginClick}
-            className="w-full bg-blue-500 text-white font-semibold py-2 rounded-lg hover:bg-blue-600 transition"
+            className="w-full bg-[var(--primary)] text-[var(--bg-dark)] font-semibold py-2 rounded-lg hover:opacity-90 transition"
           >
             Log in
           </button>
@@ -92,7 +96,7 @@ function Login() {
           <div className="text-right">
             <a
               href="#"
-              className="text-sm text-blue-500 hover:text-blue-600 hover:underline"
+              className="text-sm text-[var(--secondary)] hover:underline"
             >
               Forgot Password?
             </a>
@@ -101,10 +105,10 @@ function Login() {
 
         {/* Signup link */}
         <div className="mt-6 text-center">
-          <span className="text-gray-600">Don’t have an account?</span>{" "}
+          <span className="text-[var(--text-muted)]">Don’t have an account?</span>{" "}
           <Link
             to="/signup"
-            className="text-blue-500 font-medium hover:text-blue-600 hover:underline"
+            className="text-[var(--secondary)] font-medium hover:underline"
           >
             Signup
           </Link>

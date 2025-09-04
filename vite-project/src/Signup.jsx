@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
 function Signup() {
@@ -45,19 +45,77 @@ function Signup() {
   };
 
   return (
-    <div className="signup-container">
-      <div className="signup-title"><b>SIGNUP</b></div>
-      <div className="signup-reminder text-red-700">{reminder}</div>
-      <div className="signup-input-container">
-        <h6>Username</h6>
-        <input className="user" type="text" required placeholder="Username" />
-        <h6>Password</h6>
-        <input className="pw" type="password" required placeholder="Password" /><br />
-        <h6>Confirm Password</h6>
-        <input className="confirmPw" type="password" required placeholder="Confirm Password" /><br />
-        <button type="submit" className="bg-blue-100" onClick={handleSignupClick}>
-          Sign up
-        </button><br />
+    <div className="flex items-center justify-center min-h-screen bg-[var(--bg-dark)] px-4">
+      <div className="w-full max-w-md bg-[var(--bg)] text-[var(--text)] rounded-2xl shadow-lg p-8 border border-[var(--border)]">
+        <h1 className="text-3xl font-bold text-center mb-6">SIGN UP</h1>
+
+        {/* Reminder/Error message */}
+        {reminder && (
+          <div className="mb-4 text-center text-sm font-medium text-[var(--danger)]">
+            {reminder}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {/* Username */}
+          <div>
+            <label className="block font-medium mb-1 text-[var(--text-muted)]">
+              Username
+            </label>
+            <input
+              className="user w-full border border-[var(--border)] rounded-lg px-4 py-2 bg-[var(--bg-light)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+              type="text"
+              required
+              placeholder="Enter your username"
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block font-medium mb-1 text-[var(--text-muted)]">
+              Password
+            </label>
+            <input
+              className="pw w-full border border-[var(--border)] rounded-lg px-4 py-2 bg-[var(--bg-light)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+              type="password"
+              required
+              placeholder="Enter your password"
+            />
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label className="block font-medium mb-1 text-[var(--text-muted)]">
+              Confirm Password
+            </label>
+            <input
+              className="confirmPw w-full border border-[var(--border)] rounded-lg px-4 py-2 bg-[var(--bg-light)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+              type="password"
+              required
+              placeholder="Confirm your password"
+            />
+          </div>
+
+          {/* Signup Button */}
+          <button
+            type="submit"
+            onClick={handleSignupClick}
+            className="w-full bg-[var(--primary)] text-[var(--bg-dark)] font-semibold py-2 rounded-lg hover:opacity-90 transition"
+          >
+            Sign up
+          </button>
+        </div>
+
+        {/* Login link */}
+        <div className="mt-6 text-center">
+          <span className="text-[var(--text-muted)]">Already have an account?</span>{" "}
+          <Link
+            to="/"
+            className="text-[var(--secondary)] font-medium hover:underline"
+          >
+            Log in
+          </Link>
+        </div>
       </div>
     </div>
   );

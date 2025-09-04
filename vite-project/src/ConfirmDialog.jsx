@@ -9,21 +9,21 @@ function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
       onClick={onCancel} // click outside closes
     >
       <div
-        className="bg-white p-6 rounded-2xl shadow-lg w-80"
+        className="bg-[var(--bg)] text-[var(--text)] p-6 rounded-2xl shadow-lg w-80 border border-[var(--border)]"
         onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
       >
         <h2 className="text-xl font-bold mb-4">{title}</h2>
-        <p className="text-gray-700 mb-6">{message}</p>
+        <p className="text-[var(--text-muted)] mb-6">{message}</p>
         <div className="flex justify-end space-x-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
+            className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--text)] hover:bg-[var(--bg-light)] transition"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+            className="px-4 py-2 rounded-lg bg-[var(--danger)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition"
           >
             Confirm
           </button>

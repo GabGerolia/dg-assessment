@@ -1,6 +1,66 @@
 @import "tailwindcss";
 
-
-body{
-  background-color: rgb(255, 247, 236);
+:root {
+  /* hsl (fallback color) */
+  --bg-dark: hsl(212 50% 1%);
+  --bg: hsl(208 32% 4%);
+  --bg-light: hsl(208 18% 9%);
+  --text: hsl(208 97% 95%);
+  --text-muted: hsl(208 14% 70%);
+  --highlight: hsl(208 10% 39%);
+  --border: hsl(208 13% 28%);
+  --border-muted: hsl(207 19% 18%);
+  --primary: hsl(207 76% 70%);
+  --secondary: hsl(29 63% 65%);
+  --danger: hsl(9 26% 64%);
+  --warning: hsl(52 19% 57%);
+  --success: hsl(146 17% 59%);
+  --info: hsl(217 28% 65%);
+  /* oklch */
+  --bg-dark: oklch(0.1 0.01 244);
+  --bg: oklch(0.15 0.01 244);
+  --bg-light: oklch(0.2 0.01 244);
+  --text: oklch(0.96 0.02 244);
+  --text-muted: oklch(0.76 0.02 244);
+  --highlight: oklch(0.5 0.02 244);
+  --border: oklch(0.4 0.02 244);
+  --border-muted: oklch(0.3 0.02 244);
+  --primary: oklch(0.76 0.1 244);
+  --secondary: oklch(0.76 0.1 64);
+  --danger: oklch(0.7 0.05 30);
+  --warning: oklch(0.7 0.05 100);
+  --success: oklch(0.7 0.05 160);
+  --info: oklch(0.7 0.05 260);
+}
+body.light {
+  /* hsl (fallback color) */
+  --bg-dark: hsl(208 22% 90%);
+  --bg: hsl(208 46% 95%);
+  --bg-light: hsl(208 100% 100%);
+  --text: hsl(209 61% 5%);
+  --text-muted: hsl(208 13% 28%);
+  --highlight: hsl(208 100% 100%);
+  --border: hsl(208 8% 51%);
+  --border-muted: hsl(208 11% 62%);
+  --primary: hsl(202 100% 23%);
+  --secondary: hsl(35 100% 18%);
+  --danger: hsl(9 21% 41%);
+  --warning: hsl(52 23% 34%);
+  --success: hsl(147 19% 36%);
+  --info: hsl(217 22% 41%);
+  /* oklch */
+  --bg-dark: oklch(0.92 0.01 244);
+  --bg: oklch(0.96 0.01 244);
+  --bg-light: oklch(1 0.01 244);
+  --text: oklch(0.15 0.02 244);
+  --text-muted: oklch(0.4 0.02 244);
+  --highlight: oklch(1 0.02 244);
+  --border: oklch(0.6 0.02 244);
+  --border-muted: oklch(0.7 0.02 244);
+  --primary: oklch(0.4 0.1 244);
+  --secondary: oklch(0.4 0.1 64);
+  --danger: oklch(0.5 0.05 30);
+  --warning: oklch(0.5 0.05 100);
+  --success: oklch(0.5 0.05 160);
+  --info: oklch(0.5 0.05 260);
 }
