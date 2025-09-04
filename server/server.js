@@ -56,6 +56,46 @@ app.post("/api/login", (req, res) => {
   );
 });
 
+// signup
+app.post("/api/signup", (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username and password are required" });
+  }
+
+  // check if username already exists
+  db.query("SELECT * FROM test WHERE userName = ?", [username], (err, results) => {
+    if (err) {
+      console.error("Error checking username:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    if (results.length > 0) {
+      // username already exists
+      return res.json({ success: false, message: "Username already taken" });
+    }
+
+    // insert new user
+    db.query(
+      "INSERT INTO test (userName, password) VALUES (?, ?)",
+      [username, password],
+      (err, result) => {
+        if (err) {
+          console.error("Error inserting user:", err);
+          return res.status(500).json({ error: "Database error" });
+        }
+        res.json({ success: true, message: "User registered successfully!" });
+      }
+    );
+  });
+});
+
+
+
+app.listen(8080, () => {
+  console.log("Server started on port 8080");
+});
 
 // // fetch all data to 8080/api
 // app.get("/api", (req, res) => {
@@ -86,6 +126,4 @@ app.post("/api/login", (req, res) => {
 //   });
 // });
 
-app.listen(8080, () => {
-  console.log("Server started on port 8080");
-});
+
