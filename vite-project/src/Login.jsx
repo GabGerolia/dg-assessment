@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
 function Login() {
   const [reminder, setReminder] = useState("");
-  const navigate = useNavigate(); // hook for navigation
+  const navigate = useNavigate();
 
   const handleLoginClick = async () => {
-    const uname = document.querySelector(".user"); 
+    const uname = document.querySelector(".user");
     const pword = document.querySelector(".pw");
     const unameInput = uname.value.trim();
     const pwordInput = pword.value.trim();
@@ -28,7 +28,7 @@ function Login() {
 
       if (response.data.success) {
         setReminder("Login success!");
-        navigate("/home"); // redirect to Home page
+        navigate("/home");
       } else {
         setReminder("Invalid username or password");
       }
@@ -39,25 +39,72 @@ function Login() {
   };
 
   return (
-    <>
-      <div className="login-container">
-        <div className="login-title"><b>LOGIN</b></div>
-        <div className="login-reminder text-red-700">{reminder}</div>
-        <div className="login-input-container">
-          <h6>Username</h6>
-          <input className="user" type="text" required placeholder="Username" />
-          <h6>Password</h6>
-          <input className="pw" type="password" required placeholder="Password"/><br />
-          <button type="submit" className="bg-blue-100" onClick={handleLoginClick}>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 via-white to-blue-50 px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">LOGIN</h1>
+
+        {/* Reminder/Error message */}
+        {reminder && (
+          <div className="mb-4 text-center text-sm font-medium text-red-600">
+            {reminder}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {/* Username */}
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">Username</label>
+            <input
+              className="user w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              type="text"
+              required
+              placeholder="Enter your username"
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">Password</label>
+            <input
+              className="pw w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              type="password"
+              required
+              placeholder="Enter your password"
+            />
+          </div>
+
+          {/* Login Button */}
+          <button
+            type="submit"
+            onClick={handleLoginClick}
+            className="w-full bg-blue-500 text-white font-semibold py-2 rounded-lg hover:bg-blue-600 transition"
+          >
             Log in
-          </button> <br />
-          <a href="#">Forgot Password</a>
+          </button>
+
+          {/* Forgot password */}
+          <div className="text-right">
+            <a
+              href="#"
+              className="text-sm text-blue-500 hover:text-blue-600 hover:underline"
+            >
+              Forgot Password?
+            </a>
+          </div>
         </div>
-        <div className="login-signup">
-          <a href="/Signup">Signup</a>
+
+        {/* Signup link */}
+        <div className="mt-6 text-center">
+          <span className="text-gray-600">Don’t have an account?</span>{" "}
+          <Link
+            to="/signup"
+            className="text-blue-500 font-medium hover:text-blue-600 hover:underline"
+          >
+            Signup
+          </Link>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
