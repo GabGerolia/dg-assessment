@@ -2,15 +2,19 @@ import { useState } from "react";
 
 function CreateProject({ onClose }) {
   const [projectName, setProjectName] = useState("");
+  const [projectDesc, setProjectDesc] = useState("");
 
   const handleSubmit = () => {
     console.log("Project Name:", projectName);
+    console.log("Project Desc:", projectDesc);
     setProjectName("");
+    setProjectDesc("");
     onClose(); // close modal after submit
   };
 
   const handleClose = () => {
     setProjectName(""); // reset input
+    setProjectDesc(""); // reset input
     onClose(); // call parent to hide modal
   };
 
@@ -35,11 +39,20 @@ function CreateProject({ onClose }) {
             </h1>
 
             <input
+                required
                 type="text"
                 placeholder="Name of project"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <textarea
+                placeholder="Project description (optional)"
+                value={projectDesc}
+                onChange={(e) => setProjectDesc(e.target.value)}
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
 
             <button

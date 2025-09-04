@@ -13,23 +13,25 @@ function Home() {
         </h1>
       </div>
 
-      {/* Top Controls */}
-      <div className="flex justify-start mb-8">
-        <button
-          type="button"
-          className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
-          onClick={() => setShowModal(true)}
-        >
-          CREATE PROJECT
-        </button>
-      </div>
+
+      <div className="bg-white shadow-md rounded-xl p-6 max-w-4xl mx-auto">
+
+      
 
       {/* Projects Section */}
       <div className="text-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-700">YOUR PROJECTS</h2>
       </div>
-
-      <div className="bg-white shadow-md rounded-xl p-6 max-w-4xl mx-auto">
+        {/* Top Controls */}
+              <div className="flex justify-start mb-8">
+                <button
+                  type="button"
+                  className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
+                  onClick={() => setShowModal(true)}
+                >
+                  CREATE PROJECT
+                </button>
+        </div>
         <div className="space-y-4 " >
           {/* Example Project (template for future) */}
           <div className="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition bg-gray-50 text-left">
