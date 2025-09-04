@@ -37,7 +37,7 @@ app.post("/api/login", (req, res) => {
   }
 
   db.query(
-    "SELECT * FROM test WHERE userName = ? AND password = ?",
+    "SELECT * FROM user WHERE userName = ? AND password = ?",
     [username, password],
     (err, results) => {
       if (err) {
@@ -46,9 +46,16 @@ app.post("/api/login", (req, res) => {
       }
 
       if (results.length > 0) {
-        // username exists
-        res.json({ success: true, message: "Username found" });
-      } else {
+            res.json({
+            success: true,
+            message: "Login successful",
+            user: {
+            id: results[0].id,
+            username: results[0].userName
+          }
+        });
+      } 
+      else {
         // username not found
         res.json({ success: false, message: "Invalid username" });
       }
@@ -65,7 +72,7 @@ app.post("/api/signup", (req, res) => {
   }
 
   // check if username already exists
-  db.query("SELECT * FROM test WHERE userName = ?", [username], (err, results) => {
+  db.query("SELECT * FROM user WHERE userName = ?", [username], (err, results) => {
     if (err) {
       console.error("Error checking username:", err);
       return res.status(500).json({ error: "Database error" });
@@ -78,7 +85,7 @@ app.post("/api/signup", (req, res) => {
 
     // insert new user
     db.query(
-      "INSERT INTO test (userName, password) VALUES (?, ?)",
+      "INSERT INTO user (userName, password) VALUES (?, ?)",
       [username, password],
       (err, result) => {
         if (err) {
@@ -91,39 +98,68 @@ app.post("/api/signup", (req, res) => {
   });
 });
 
+// Create project
+app.post("/api/projects", (req, res) => {
+  const { userId, title, description } = req.body;
+
+  if (!userId || !title) {
+    return res.status(400).json({ success: false, message: "Missing fields" });
+  }
+
+  const sql = "INSERT INTO projects (user_id, title, description) VALUES (?, ?, ?)";
+  db.query(sql, [userId, title, description], (err, result) => {
+    if (err) {
+      console.error("Error inserting project:", err);
+      return res.status(500).json({ success: false, error: "Database error" });
+    }
+    res.json({ success: true, id: result.insertId });
+  });
+});
+
+// Get projects by user
+app.get("/api/projects/:userId", (req, res) => {
+  const { userId } = req.params;
+  const sql = "SELECT * FROM projects WHERE user_id = ?";
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching projects:", err);
+      return res.status(500).json({ success: false, error: "Database error" });
+    }
+    res.json({ success: true, projects: results });
+  });
+});
+
+// Update project
+app.put("/api/projects/:id", (req, res) => {
+  const { id } = req.params;
+  const { title, description } = req.body;
+  const sql = "UPDATE projects SET title = ?, description = ? WHERE id = ?";
+  db.query(sql, [title, description, id], (err, result) => {
+    if (err) {
+      console.error("Error updating project:", err);
+      return res.status(500).json({ success: false, error: "Database error" });
+    }
+    res.json({ success: true });
+  });
+});
+
+// Delete project
+app.delete("/api/projects/:id", (req, res) => {
+  const { id } = req.params;
+  const sql = "DELETE FROM projects WHERE id = ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("Error deleting project:", err);
+      return res.status(500).json({ success: false, error: "Database error" });
+    }
+    res.json({ success: true });
+  });
+});
 
 
 app.listen(8080, () => {
   console.log("Server started on port 8080");
 });
 
-// // fetch all data to 8080/api
-// app.get("/api", (req, res) => {
-//   db.query("SELECT * FROM test", (err, results) => {
-//     if (err) {
-//       console.error("Error fetching data:", err);
-//       res.status(500).json({ error: "Database error" });
-//     } else {
-//       res.json(results);
-//     }
-//   });
-// });
-
-// // test insert
-// app.post("/api", (req, res) => {
-//   const { name } = req.body;
-//   if (!name) {
-//     return res.status(400).json({ error: "Name is required" });
-//   }
-
-//   db.query("INSERT INTO test (name) VALUES (?)", [name], (err, result) => {
-//     if (err) {
-//       console.error("Error inserting data:", err);
-//       res.status(500).json({ error: "Database error" });
-//     } else {
-//       res.json({ id: result.insertId, name });
-//     }
-//   });
-// });
 
 

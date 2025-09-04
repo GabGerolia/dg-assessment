@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { useUser } from "./UserContext";  // <-- import
 
 function Login() {
   const [reminder, setReminder] = useState("");
   const navigate = useNavigate();
+  const { setUser } = useUser();  // <-- get setter from context
 
   const handleLoginClick = async () => {
     const uname = document.querySelector(".user");
@@ -28,6 +30,11 @@ function Login() {
 
       if (response.data.success) {
         setReminder("Login success!");
+
+        // 🔑 save user globally
+        setUser(response.data.user);
+
+        // redirect to home
         navigate("/home");
       } else {
         setReminder("Invalid username or password");
@@ -37,7 +44,6 @@ function Login() {
       setReminder("Server error.");
     }
   };
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 via-white to-blue-50 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">

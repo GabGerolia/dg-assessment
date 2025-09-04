@@ -1,39 +1,39 @@
 import { useState, useEffect } from "react";
 
 function CreateProject({ onClose, onCreate, editingProject }) {
-  const [projectName, setProjectName] = useState("");
-  const [projectDesc, setProjectDesc] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [reminder, setReminder] = useState(""); // error message state
 
   // Pre-fill inputs if editing a project
   useEffect(() => {
     if (editingProject) {
-      setProjectName(editingProject.name || "");
-      setProjectDesc(editingProject.desc || "");
+      setTitle(editingProject.title || "");
+      setDescription(editingProject.description || "");
     }
   }, [editingProject]);
 
   const handleSubmit = () => {
-    if (!projectName.trim()) {
-      setReminder("Project name cannot be empty.");
+    if (!title.trim()) {
+      setReminder("Project title cannot be empty.");
       return;
     }
 
     // If editing, include the index to update in parent
     if (editingProject?.index !== undefined) {
-      onCreate({ ...editingProject, name: projectName, desc: projectDesc });
+      onCreate({ ...editingProject, title, description });
     } else {
-      onCreate({ name: projectName, desc: projectDesc });
+      onCreate({ title, description });
     }
 
-    setProjectName("");
-    setProjectDesc("");
+    setTitle("");
+    setDescription("");
     setReminder(""); // clear reminder on success
   };
 
   const handleClose = () => {
-    setProjectName("");
-    setProjectDesc("");
+    setTitle("");
+    setDescription("");
     setReminder(""); // reset error message
     onClose();
   };
@@ -55,7 +55,7 @@ function CreateProject({ onClose, onCreate, editingProject }) {
         </button>
 
         <h1 className="text-2xl font-bold text-center mb-4">
-          {editingProject ? "Edit Project" : "Name of Project?"}
+          {editingProject ? "Edit Project" : "Create Project"}
         </h1>
 
         {/* Reminder/Error message */}
@@ -68,16 +68,16 @@ function CreateProject({ onClose, onCreate, editingProject }) {
         <input
           required
           type="text"
-          placeholder="Name of project"
-          value={projectName}
-          onChange={(e) => setProjectName(e.target.value)}
+          placeholder="Project title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         <textarea
           placeholder="Project description (optional)"
-          value={projectDesc}
-          onChange={(e) => setProjectDesc(e.target.value)}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           rows={4}
           className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
         />

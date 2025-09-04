@@ -1,15 +1,18 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "./Login";
 import Home from "./Home";
-// import './App.css'
 import Signup from "./Signup";
+import { UserProvider } from "./UserContext"; // <-- import context
+
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/Signup" element={<Signup />} />
-    </Routes>
+    <UserProvider>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/signup" element={<Signup />} />
+      </Routes>
+    </UserProvider>
   );
 }
 
