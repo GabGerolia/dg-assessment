@@ -85,7 +85,8 @@ function Home() {
   return (
     <div className="min-h-screen bg-[var(--bg-dark)] text-[var(--text)]">
       {/* Navbar */}
-      <Navbar />
+      <Navbar user={user} />
+
 
       {/* Page content with padding to avoid overlap */}
       <div className="px-6 py-10 pt-24">
@@ -94,14 +95,6 @@ function Home() {
           <h1 className="text-4xl font-bold text-[var(--text)]">
             PROJECT MANAGEMENT TOOL
           </h1>
-          {user && (
-            <p className="text-[var(--text-muted)] mt-2">
-              Logged in as{" "}
-              <span className="text-[var(--secondary)] font-medium">
-                {user.username}
-              </span>
-            </p>
-          )}
         </div>
 
         {/* Main Card */}

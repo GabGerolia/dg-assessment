@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-function Navbar() {
-  const [theme, setTheme] = useState("dark"); // default dark mode
+function Navbar({ user }) {
+  const [theme, setTheme] = useState("dark");
 
   useEffect(() => {
     document.body.classList.remove("light", "dark");
@@ -15,10 +15,17 @@ function Navbar() {
   return (
     <nav className="w-full flex items-center justify-between px-6 py-3 bg-[var(--bg)] border-b border-[var(--border)] shadow">
       {/* Logo / Title */}
-      <div className="text-2xl font-bold">Home</div>
+      <div className="text-2xl font-bold cursor-pointer">Home</div>
 
-      {/* Icons */}
+      {/* Icons and Username */}
       <div className="flex items-center space-x-4">
+        {/* Username */}
+        {user && (
+          <span className="text-[var(--secondary)] font-medium">
+            {user.username}
+          </span>
+        )}
+
         {/* Dark/Light Mode */}
         <button
           onClick={toggleTheme}
@@ -26,7 +33,6 @@ function Navbar() {
           aria-label="Toggle dark mode"
         >
           {theme === "dark" ? (
-            // Sun Icon for Light Mode
             <svg
               className="w-6 h-6"
               fill="none"
@@ -41,7 +47,6 @@ function Navbar() {
               />
             </svg>
           ) : (
-            // Moon Icon for Dark Mode
             <svg
               className="w-6 h-6"
               fill="none"
