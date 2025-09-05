@@ -18,6 +18,9 @@ function Signup() {
     if (unameInput === "") {
       setReminder("Username cannot be empty.");
       return;
+    } else if (unameInput.length > 9) {
+      setReminder("Username must only contain 9 or fewer characters.");
+      return;
     } else if (pwordInput === "" || confirmPwordInput === "") {
       setReminder("Password cannot be empty.");
       return;
@@ -43,6 +46,7 @@ function Signup() {
       setReminder("Server error. Please try again.");
     }
   };
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--bg-dark)] px-4">
