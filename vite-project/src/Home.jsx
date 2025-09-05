@@ -84,6 +84,7 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-dark)] text-[var(--text)]">
+      {/* Navbar */}
       <Navbar />
 
       {/* Page content with padding to avoid overlap */}

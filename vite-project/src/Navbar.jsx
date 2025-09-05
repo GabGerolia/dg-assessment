@@ -13,7 +13,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-[var(--bg)] text-[var(--text)] shadow-md">
+    <nav className="w-full flex items-center justify-between px-6 py-3 bg-[var(--bg)] border-b border-[var(--border)] shadow">
       {/* Logo / Title */}
       <div className="text-2xl font-bold">Home</div>
 

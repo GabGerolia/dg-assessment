@@ -31,7 +31,7 @@ function Login() {
       if (response.data.success) {
         setReminder("Login success!");
 
-        // 🔑 save user globally
+        // save user globally
         setUser(response.data.user);
 
         // redirect to home
