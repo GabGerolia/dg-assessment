@@ -10,7 +10,10 @@ import TaskCard from "./TaskCard";
 import CreateColumn from "./CreateColumn";
 import CreateTasks from "./CreateTasks";
 
+
 function TaskManagement() {
+  const [editingProject, setEditingProject] = useState(null);
+
   // icons
   const threeDotsIcon = (
     <svg

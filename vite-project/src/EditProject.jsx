@@ -1,25 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-function CreateProject({ onClose, onCreate }) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+function EditProject({ onClose, onUpdate, project }) {
+  const [title, setTitle] = useState(project?.title || "");
+  const [description, setDescription] = useState(project?.description || "");
   const [reminder, setReminder] = useState("");
 
-  const handleCreate = () => {
+  useEffect(() => {
+    if (project) {
+      setTitle(project.title || "");
+      setDescription(project.description || "");
+    }
+  }, [project]);
+
+  const handleUpdate = () => {
     if (!title.trim()) {
       setReminder("Project title cannot be empty.");
       return;
     }
 
-    onCreate({ title, description });
-    setTitle("");
-    setDescription("");
+    onUpdate({ id: project.id, title, description });
     setReminder("");
   };
 
   const handleClose = () => {
-    setTitle("");
-    setDescription("");
+    setTitle(project?.title || "");
+    setDescription(project?.description || "");
     setReminder("");
     onClose();
   };
@@ -40,7 +45,7 @@ function CreateProject({ onClose, onCreate }) {
           ✕
         </button>
 
-        <h1 className="text-2xl font-bold text-center mb-4">Create Project</h1>
+        <h1 className="text-2xl font-bold text-center mb-4">Edit Project</h1>
 
         {reminder && (
           <div className="text-[var(--danger)] text-sm text-center mb-4">
@@ -72,10 +77,10 @@ function CreateProject({ onClose, onCreate }) {
             Cancel
           </button>
           <button
-            onClick={handleCreate}
+            onClick={handleUpdate}
             className="flex-1 bg-[var(--primary)] text-[var(--bg-dark)] font-medium py-2 rounded-lg hover:opacity-90 transition"
           >
-            Create
+            Update
           </button>
         </div>
       </div>
@@ -83,4 +88,4 @@ function CreateProject({ onClose, onCreate }) {
   );
 }
 
-export default CreateProject;
+export default EditProject;

@@ -4,6 +4,7 @@ import CreateProject from "./CreateProject";
 import ConfirmDialog from "./ConfirmDialog";
 import { useUser } from "./UserContext";
 import Navbar from "./Navbar";
+import EditProject from "./EditProject";
 
 function Home() {
   const { user } = useUser();
@@ -202,14 +203,19 @@ function Home() {
         {/* Modals */}
         {showModal && (
           <CreateProject
-            onClose={() => {
-              setShowModal(false);
-              setEditingProject(null);
-            }}
+            onClose={() => setShowModal(false)}
             onCreate={handleCreateProject}
-            editingProject={editingProject}
           />
         )}
+
+        {editingProject && (
+          <EditProject
+            project={editingProject}
+            onClose={() => setEditingProject(null)}
+            onUpdate={handleCreateProject}
+          />
+        )}
+
 
         {/* Confirm Delete */}
         <ConfirmDialog
