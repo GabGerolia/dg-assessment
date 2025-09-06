@@ -1,21 +1,27 @@
-import { useDraggable } from "@dnd-kit/core";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 
 function TaskCard({ id, title, description, threeDotsIcon }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
+  const { attributes, listeners, setNodeRef, transform,  } =
     useDraggable({
       id,
       data: { task: { id, title, description } },
     });
 
+  const { setNodeRef: setDropRef } = useDroppable({
+    id,
+    data: { taskId: id },
+  });
+
   const style = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-    opacity: isDragging ? 0.5 : 1,
   };
 
-
-   return (
+  return (
     <div
-      ref={setNodeRef}
+      ref={(el) => {
+        setNodeRef(el);
+        setDropRef(el);
+      }}
       style={style}
       {...listeners}
       {...attributes}

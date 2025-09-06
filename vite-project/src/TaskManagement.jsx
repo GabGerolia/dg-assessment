@@ -11,6 +11,11 @@ import CreateColumn from "./CreateColumn";
 import CreateTasks from "./CreateTasks";
 
 function TaskManagement() {
+
+  const findTaskIndex = (colId, taskId) => {
+  return columns[colId].tasks.findIndex((t) => t.id === taskId);
+};
+
   // icons
   const threeDotsIcon = (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -86,7 +91,7 @@ function TaskManagement() {
       available = Math.max(0, available - 4);
 
       tasks.style.maxHeight = `${available}px`;
-      tasks.style.overflowY = tasks.scrollHeight > available ? "auto" : "hidden";
+      tasks.style.overflow = tasks.scrollHeight > available ? "auto" : "hidden";
     });
   };
 
@@ -117,32 +122,57 @@ function TaskManagement() {
     setActiveTask(event.active.data.current.task);
   };
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    if (!over) return;
+const handleDragEnd = (event) => {
+  const { active, over } = event;
+  if (!over) return;
 
-    const sourceColId = findColumnId(active.id);
-    const destColId = over.data.current?.column?.id;
+  const sourceColId = findColumnId(active.id);
+  const destColId = over.data.current?.column?.id || findColumnId(over.id);
 
-    if (!sourceColId || !destColId) return;
+  if (!sourceColId || !destColId) return;
 
-    if (sourceColId !== destColId) {
-      const sourceTasks = [...columns[sourceColId].tasks];
-      const destTasks = [...columns[destColId].tasks];
+  // If task stays in the same column
+  if (sourceColId === destColId) {
+    const sourceTasks = [...columns[sourceColId].tasks];
+    const fromIndex = findTaskIndex(sourceColId, active.id);
+    const toIndex = findTaskIndex(destColId, over.id);
 
-      const taskIndex = sourceTasks.findIndex((t) => t.id === active.id);
-      const [movedTask] = sourceTasks.splice(taskIndex, 1);
-      destTasks.push(movedTask);
+    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+      const [movedTask] = sourceTasks.splice(fromIndex, 1);
+      sourceTasks.splice(toIndex, 0, movedTask);
 
       setColumns({
         ...columns,
         [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
-        [destColId]: { ...columns[destColId], tasks: destTasks },
       });
     }
-    setActiveTask(null);
-    recalc();
-  };
+  } else {
+    // If task moves to another column
+    const sourceTasks = [...columns[sourceColId].tasks];
+    const destTasks = [...columns[destColId].tasks];
+
+    const fromIndex = findTaskIndex(sourceColId, active.id);
+    const toIndex = findTaskIndex(destColId, over.id);
+
+    const [movedTask] = sourceTasks.splice(fromIndex, 1);
+
+    if (toIndex >= 0) {
+      destTasks.splice(toIndex, 0, movedTask); // insert at position
+    } else {
+      destTasks.push(movedTask); // if dropped on empty column
+    }
+
+    setColumns({
+      ...columns,
+      [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
+      [destColId]: { ...columns[destColId], tasks: destTasks },
+    });
+  }
+
+  setActiveTask(null);
+  recalc();
+};
+
 
   return (
     <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
