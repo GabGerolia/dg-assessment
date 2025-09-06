@@ -70,7 +70,7 @@ function CreateColumn({ onClose, onSave }) {
 
         {/* Color Picker */}
         <div className="mb-6">
-          <h2 className="text-sm font-medium mb-2">Choose border color:</h2>
+          <h2 className="text-sm font-medium mb-2">Choose a border color:</h2>
           <div className="flex space-x-2 flex-wrap">
             {presetColors.map((color) => (
               <button
