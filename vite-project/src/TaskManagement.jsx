@@ -204,7 +204,7 @@ const handleDragEnd = (event) => {
 
       {/* Columns */}
       <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div ref={parentRef} className="task-parent-columns flex-1 min-h-0 overflow-x-auto flex space-x-3 px-6 py-6">
+        <div ref={parentRef} className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6">
           {Object.values(columns).map((col) => (
             <TaskColumn key={col.id} id={col.id} title={col.title} color={col.color} threeDotsIcon={threeDotsIcon}>
               {col.tasks.map((task) => (
