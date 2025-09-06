@@ -1,6 +1,7 @@
 import { useDroppable } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
-function TaskColumn({ id, title, color, children, threeDotsIcon }) {
+function TaskColumn({ id, title, color, children, threeDotsIcon, tasks }) {
   const { setNodeRef, isOver } = useDroppable({
     id,
     data: { column: { id, title } },
@@ -22,7 +23,9 @@ function TaskColumn({ id, title, color, children, threeDotsIcon }) {
         ref={setNodeRef}
         className={`task-tasks flex-1 min-h-0 p-3 space-y-3 ${isOver ? "bg-[var(--bg-light)]" : ""}`}
       >
-        {children}
+        <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          {children}
+        </SortableContext>
       </div>
 
       <button type="button" className="task-addtask px-4 py-2 text-left text-[var(--secondary)] font-medium hover:underline">

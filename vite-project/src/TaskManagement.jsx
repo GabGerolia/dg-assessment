@@ -201,9 +201,22 @@ const handleDragEnd = (event) => {
       <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div ref={parentRef} className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6">
           {Object.values(columns).map((col) => (
-            <TaskColumn key={col.id} id={col.id} title={col.title} color={col.color} threeDotsIcon={threeDotsIcon}>
+            <TaskColumn
+              key={col.id}
+              id={col.id}
+              title={col.title}
+              color={col.color}
+              tasks={col.tasks}       // needed for SortableContext
+              threeDotsIcon={threeDotsIcon}
+            >
               {col.tasks.map((task) => (
-                <TaskCard key={task.id} id={task.id} title={task.title} description={task.description} threeDotsIcon={threeDotsIcon} />
+                <TaskCard
+                  key={task.id}
+                  id={task.id}
+                  title={task.title}
+                  description={task.description}
+                  threeDotsIcon={threeDotsIcon}
+                />
               ))}
             </TaskColumn>
           ))}

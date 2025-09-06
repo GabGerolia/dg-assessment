@@ -1,21 +1,18 @@
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 function TaskCard({ id, title, description, threeDotsIcon, isOverlay }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id,
-      data: { task: { id, title, description } },
-    });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
 
-  // Only normal card styling
   const style = isOverlay
     ? {
-        position: "fixed",      // fix overlay to viewport
+        position: "fixed",
         top: 0,
         left: 0,
-        zIndex: 9999,
-        width: 280,             // fixed width
-        pointerEvents: "none",  // overlay should not block pointer
+        zIndex: 99,
+        width: 280,
+        pointerEvents: "none",
         boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
         transform: transform
           ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
@@ -23,8 +20,9 @@ function TaskCard({ id, title, description, threeDotsIcon, isOverlay }) {
         opacity: 0.95,
       }
     : {
-        opacity: isDragging ? 0.3 : 1,  // fade out original while dragging
-        transition: "opacity 0.2s ease",
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.3 : 1,
       };
 
   return (
