@@ -7,6 +7,8 @@ import {
 import Navbar from "./Navbar";
 import TaskColumn from "./TaskColumn";
 import TaskCard from "./TaskCard";
+import CreateColumn from "./CreateColumn";
+import CreateTasks from "./CreateTasks";
 
 function TaskManagement() {
   // icons
@@ -27,25 +29,53 @@ function TaskManagement() {
     </svg>
   );
 
-  // board state
+  const editIcon = 
+    <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="size-6"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+    />
+  </svg>;
+
+  // board state preset
   const [columns, setColumns] = useState({
-    todo: {
-      id: "todo",
-      title: "To Do",
-      tasks: [
-        { id: "t1", title: "Task 1", description: "Example task 1" },
-        { id: "t2", title: "Task 2", description: "Example task 2" },
-      ],
-    },
-    inprogress: {
-      id: "inprogress",
-      title: "In Progress",
-      tasks: [{ id: "t3", title: "Task 3", description: "Example task 3" }],
-    },
-    done: { id: "done", title: "Done", tasks: [] },
+      todo: {
+        id: "todo",
+        title: "To Do",
+        color:  "hsl(140 35% 30%)", // Muted green
+
+        tasks: [
+          { id: "t1", title: "Task 1", description: "Example task 1" },
+          { id: "t2", title: "Task 2", description: "Example task 2" },
+        ],
+      },
+      inprogress: {
+        id: "inprogress",
+        title: "In Progress",
+        color: "hsl(45 40% 30%)",  // Muted yellow
+        tasks: [{ id: "t3", title: "Task 3", description: "Example task 3" }],
+      },
+      done: {
+        id: "done",
+        title: "Done",
+        color: "hsl(270 35% 30%)", // Muted violet
+        tasks: [],
+      },
   });
 
   const [activeTask, setActiveTask] = useState(null);
+
+  // modal states
+  const [showCreateColumn, setShowCreateColumn] = useState(false);
+  const [showCreateTask, setShowCreateTask] = useState(null); // store columnId when adding task
 
   const parentRef = useRef(null);
 
@@ -154,22 +184,70 @@ function TaskManagement() {
     recalc(); // trigger recalculation after dropping
   };
 
+  // handle column creation
+  const handleSaveColumn = ({ title, description, color }) => {
+    const id = title.toLowerCase().replace(/\s+/g, "-");
+    setColumns({
+      ...columns,
+      [id]: { id, title, description, color, tasks: [] },
+    });
+    setShowCreateColumn(false);
+  };
+
+  // handle task creation
+  const handleSaveTask = ({ title, description }) => {
+    const colId = showCreateTask;
+    if (!colId) return;
+
+    const newTask = {
+      id: `${colId}-${Date.now()}`,
+      title,
+      description,
+    };
+
+    setColumns({
+      ...columns,
+      [colId]: {
+        ...columns[colId],
+        tasks: [...columns[colId].tasks, newTask],
+      },
+    });
+
+    setShowCreateTask(null);
+  };
+
   return (
     <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
       <Navbar />
 
       {/* Title */}
       <div className="task-title w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
-        <h1 className="text-2xl font-bold mb-1">Project Board</h1>
-        <p className="text-[var(--text-muted)] max-h-[4.5rem] overflow-y-auto leading-snug">
-          Example board with drag-and-drop.
-        </p>
+          <h1 className="text-2xl font-bold mb-1">Project Board</h1>
+          <p className="text-[var(--text-muted)] max-h-[4.5rem] overflow-y-auto leading-snug">
+            Example board with drag-and-drop.
+          </p>
       </div>
+        <div className="task-title relative w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
+          <h1 className="text-2xl font-bold mb-1">Project Board</h1>
+          <p className="text-[var(--text-muted)] max-h-[4.5rem] overflow-y-auto leading-snug">
+            Example board with drag-and-drop.
+          </p>
+
+          {/* Edit icon */}
+          <button
+              type="button"
+              className="absolute top-4 right-6 text-[var(--text-muted)] hover:text-[var(--primary)] transition"
+            >
+              {editIcon}
+          </button>
+        </div>
+
 
       {/* Tools */}
       <div className="task-tools flex items-center space-x-3 px-6 py-3 bg-[var(--bg)] border-b border-[var(--border)]">
         <button
           type="button"
+          onClick={() => setShowCreateColumn(true)}
           className="px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition"
         >
           Create Column
@@ -184,10 +262,26 @@ function TaskManagement() {
       >
         <div
           ref={parentRef}
-          className="task-parent-columns flex-1 min-h-0 overflow-x-auto flex space-x-6 px-6 py-6"
+          className="task-parent-columns flex-1 min-h-0 overflow-x-auto flex space-x-3 px-6 py-6"
         >
           {Object.values(columns).map((col) => (
-            <TaskColumn key={col.id} column={col} threeDotsIcon={threeDotsIcon} />
+            <TaskColumn
+              key={col.id}
+              column={col}
+              threeDotsIcon={threeDotsIcon}
+              onAddTask={(columnId, task) => {
+                setColumns((prev) => ({
+                  ...prev,
+                  [columnId]: {
+                    ...prev[columnId],
+                    tasks: [
+                      ...prev[columnId].tasks,
+                      { id: Date.now().toString(), ...task }, // generate unique id
+                    ],
+                  },
+                }));
+              }}
+            />
           ))}
         </div>
 
@@ -198,6 +292,21 @@ function TaskManagement() {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Popups */}
+      {showCreateColumn && (
+        <CreateColumn
+          onClose={() => setShowCreateColumn(false)}
+          onSave={handleSaveColumn}
+        />
+      )}
+
+      {showCreateTask && (
+        <CreateTasks
+          onClose={() => setShowCreateTask(null)}
+          onSave={handleSaveTask}
+        />
+      )}
     </div>
   );
 }
