@@ -249,6 +249,14 @@ function TaskManagement() {
         >
           Create Column
         </button>
+
+
+        <button
+          type="button"
+          className="px-4 py-2 rounded-lg bg-[var(--secondary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition"
+        >
+          View logs
+        </button>
       </div>
 
       {/* Columns - attach parentRef here */}
