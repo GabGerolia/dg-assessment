@@ -61,11 +61,6 @@ function TaskManagement() {
   });
 
   const [activeTask, setActiveTask] = useState(null);
-
-  // modal states
-  const [showCreateColumn, setShowCreateColumn] = useState(false);
-  const [showCreateTask, setShowCreateTask] = useState(null);
-
   const parentRef = useRef(null);
 
   // ===== height recalculation logic (your code kept) =====
