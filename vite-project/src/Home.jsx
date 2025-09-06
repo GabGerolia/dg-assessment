@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import CreateProject from "./CreateProject";
 import ConfirmDialog from "./ConfirmDialog";
@@ -8,12 +9,12 @@ import EditProject from "./EditProject";
 
 function Home() {
   const { user } = useUser();
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [projects, setProjects] = useState([]);
   const [editingProject, setEditingProject] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
-
   //icons
 
   const editIcon = 
@@ -100,6 +101,12 @@ function Home() {
     setShowModal(false);
   };
 
+  //open project
+  const handleOpenProject = (project) => {
+    // navigate and pass project in location.state so TaskManagement can read it
+    navigate(`/TaskManagement/${project.id}`, { state: { project } });
+  };
+
   // Delete
   const handleDeleteClick = (id) => {
     setProjectToDelete(id);
@@ -156,10 +163,13 @@ function Home() {
           {/* Scrollable Project List */}
           <div className="max-h-[500px] overflow-y-auto space-y-4">
             {projects.map((project, index) => (
-
+              
               // created projects
               <div
-                key={index}
+                key={project.id ?? index}
+                onClick={() => handleOpenProject(project)}
+                role="button"
+                tabIndex={0}
                 className="relative border border-[var(--border-muted)] rounded-lg p-4 shadow-sm hover:shadow-md transition bg-[var(--bg-light)] text-left group"
               >
                 {/* Action icons */}

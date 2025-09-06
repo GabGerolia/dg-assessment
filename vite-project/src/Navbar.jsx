@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 function Navbar({ user }) {
   const [theme, setTheme] = useState("dark");
@@ -9,13 +10,18 @@ function Navbar({ user }) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === "dark" ? "light" : "dark"));
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
   return (
     <nav className="w-full flex items-center justify-between px-6 py-3 bg-[var(--bg)] border-b border-[var(--border)] shadow">
       {/* Logo / Title */}
-      <div className="text-2xl font-bold cursor-pointer">Home</div>
+      <Link
+        to="/home"
+        className="text-2xl font-bold cursor-pointer hover:text-[var(--primary)] transition"
+      >
+        Home
+      </Link>
 
       {/* Icons and Username */}
       <div className="flex items-center space-x-4">
