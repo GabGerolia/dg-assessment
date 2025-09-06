@@ -10,9 +10,9 @@ import EditProject from "./EditProject";
 function Home() {
   const { user } = useUser();
   const navigate = useNavigate();
-  const [showModal, setShowModal] = useState(false);
+  const [setshowCreateProject, setsetshowCreateProject] = useState(false);
   const [projects, setProjects] = useState([]);
-  const [editingProject, setEditingProject] = useState(null);
+  const [showEditingProject, setshowEditingProject] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
   //icons
@@ -66,9 +66,9 @@ function Home() {
 
   // Create or Update
   const handleCreateProject = (project) => {
-    if (editingProject) {
+    if (showEditingProject) {
       axios
-        .put(`http://localhost:8080/api/projects/${editingProject.id}`, {
+        .put(`http://localhost:8080/api/projects/${showEditingProject.id}`, {
           title: project.title,
           description: project.description,
         })
@@ -76,10 +76,10 @@ function Home() {
           if (res.data.success) {
             setProjects((prev) =>
               prev.map((p) =>
-                p.id === editingProject.id ? { ...p, ...project } : p
+                p.id === showEditingProject.id ? { ...p, ...project } : p
               )
             );
-            setEditingProject(null);
+            setshowEditingProject(null);
           }
         });
     } else {
@@ -98,7 +98,7 @@ function Home() {
           }
         });
     }
-    setShowModal(false);
+    setsetshowCreateProject(false);
   };
 
   //open project
@@ -132,9 +132,9 @@ function Home() {
 
 
       {/* Page content with padding to avoid overlap */}
-      <div className="px-6 py-10 pt-24">
+      <div className="px-6 py-10">
         {/* Page Title */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-15">
           <h1 className="text-4xl font-bold text-[var(--text)]">
             PROJECT MANAGEMENT TOOL
           </h1>
@@ -154,7 +154,7 @@ function Home() {
             <button
               type="button"
               className="bg-[var(--primary)] text-[var(--bg-light)] px-6 py-2 rounded-lg hover:opacity-90 transition"
-              onClick={() => setShowModal(true)}
+              onClick={() => setsetshowCreateProject(true)}
             >
               <b>CREATE PROJECT</b>
             </button>
@@ -173,13 +173,14 @@ function Home() {
                 className="relative border border-[var(--border-muted)] rounded-lg p-4 shadow-sm hover:shadow-md transition bg-[var(--bg-light)] text-left group"
               >
                 {/* Action icons */}
-                <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition">
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition cursor-pointer">
                   
                   {/* Edit */}
                   <button
                     onClick={() => {
-                      setEditingProject({ ...project, index });
-                      setShowModal(true);
+                      setshowEditingProject({ ...project, index });
                     }}
                     className="text-[var(--primary)] hover:opacity-80"
                   >
@@ -211,17 +212,17 @@ function Home() {
         </div>
 
         {/* Modals */}
-        {showModal && (
+        {setshowCreateProject && (
           <CreateProject
-            onClose={() => setShowModal(false)}
+            onClose={() => setsetshowCreateProject(false)}
             onCreate={handleCreateProject}
           />
         )}
 
-        {editingProject && (
+        {showEditingProject && (
           <EditProject
-            project={editingProject}
-            onClose={() => setEditingProject(null)}
+            project={showEditingProject}
+            onClose={() => setshowEditingProject(null)}
             onUpdate={handleCreateProject}
           />
         )}
