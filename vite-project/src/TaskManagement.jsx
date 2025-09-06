@@ -221,7 +221,7 @@ function TaskManagement() {
 
   return (
     <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
-      <Navbar />
+      <Navbar/>
 
       {/* Title */}
         <div className="task-title relative w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">

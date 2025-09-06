@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "./UserContext";
 
-function Navbar({ user }) {
+function Navbar() {
+  const { user, setUser } = useUser();
   const [theme, setTheme] = useState("dark");
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.body.classList.remove("light", "dark");
@@ -10,18 +13,24 @@ function Navbar({ user }) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    setTheme(prev => (prev === "dark" ? "light" : "dark"));
+  };
+
+  const handleLogout = () => {
+    setUser(null); // clear context
+    localStorage.removeItem("user"); // clear persistence
+    navigate("/"); // go back to login
   };
 
   return (
     <nav className="w-full flex items-center justify-between px-6 py-3 bg-[var(--bg)] border-b border-[var(--border)] shadow">
       {/* Logo / Title */}
-      <Link
-        to="/home"
-        className="text-2xl font-bold cursor-pointer hover:text-[var(--primary)] transition"
+      <div
+        className="text-2xl font-bold cursor-pointer"
+        onClick={() => navigate("/home")}
       >
         Home
-      </Link>
+      </div>
 
       {/* Icons and Username */}
       <div className="flex items-center space-x-4">
@@ -71,6 +80,7 @@ function Navbar({ user }) {
 
         {/* Logout */}
         <button
+          onClick={handleLogout}
           className="p-2 rounded-full hover:bg-[var(--danger)]/20 transition"
           aria-label="Log out"
         >
