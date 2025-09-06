@@ -210,9 +210,16 @@ const handleDragEnd = (event) => {
         </div>
         <DragOverlay>
           {activeTask ? (
-            <TaskCard id={activeTask.id} title={activeTask.title} description={activeTask.description} threeDotsIcon={threeDotsIcon} />
+            <TaskCard
+              id={activeTask.id}
+              title={activeTask.title}
+              description={activeTask.description}
+              threeDotsIcon={threeDotsIcon}
+              isOverlay={true} // overlay styling
+            />
           ) : null}
         </DragOverlay>
+
       </DndContext>
     </div>
   );
