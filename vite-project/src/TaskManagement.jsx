@@ -221,16 +221,10 @@ function TaskManagement() {
       <Navbar />
 
       {/* Title */}
-      <div className="task-title w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
-          <h1 className="text-2xl font-bold mb-1">Project Board</h1>
-          <p className="text-[var(--text-muted)] max-h-[4.5rem] overflow-y-auto leading-snug">
-            Example board with drag-and-drop.
-          </p>
-      </div>
         <div className="task-title relative w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
-          <h1 className="text-2xl font-bold mb-1">Project Board</h1>
+          <h1 className="text-2xl font-bold mb-1">Example fetched Title</h1>
           <p className="text-[var(--text-muted)] max-h-[4.5rem] overflow-y-auto leading-snug">
-            Example board with drag-and-drop.
+            Example fetched descriptions.
           </p>
 
           {/* Edit icon */}
