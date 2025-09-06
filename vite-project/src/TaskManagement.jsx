@@ -11,8 +11,6 @@ import CreateColumn from "./CreateColumn";
 import CreateTasks from "./CreateTasks";
 
 function TaskManagement() {
-  const [columnOrder, setColumnOrder] = useState(["todo", "inprogress", "done"]);
-
   // icons
   const threeDotsIcon = (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -58,7 +56,6 @@ function TaskManagement() {
   });
 
   const [activeTask, setActiveTask] = useState(null);
-  const [activeColumn, setActiveColumn] = useState(null);
 
   // modal states
   const [showCreateColumn, setShowCreateColumn] = useState(false);
@@ -66,13 +63,13 @@ function TaskManagement() {
 
   const parentRef = useRef(null);
 
-  // ===== height recalculation logic (kept intact) =====
+  // ===== height recalculation logic (your code kept) =====
   const recalc = () => {
     const parent = parentRef.current;
     if (!parent) return;
 
-    const cols = parent.querySelectorAll(".task-column");
-    cols.forEach((col) => {
+    const columns = parent.querySelectorAll(".task-column");
+    columns.forEach((col) => {
       const header = col.querySelector(".task-column-header");
       const footer = col.querySelector(".task-addtask");
       const tasks = col.querySelector(".task-tasks");
@@ -117,60 +114,34 @@ function TaskManagement() {
   };
 
   const handleDragStart = (event) => {
-    if (event.active.data.current?.type === "task") {
-      setActiveTask(event.active.data.current.task);
-    }
-    if (event.active.data.current?.type === "column") {
-      setActiveColumn(event.active.data.current.column);
-    }
+    setActiveTask(event.active.data.current.task);
   };
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
-    if (!over) {
-      setActiveTask(null);
-      setActiveColumn(null);
-      return;
+    if (!over) return;
+
+    const sourceColId = findColumnId(active.id);
+    const destColId = over.data.current?.column?.id;
+
+    if (!sourceColId || !destColId) return;
+
+    if (sourceColId !== destColId) {
+      const sourceTasks = [...columns[sourceColId].tasks];
+      const destTasks = [...columns[destColId].tasks];
+
+      const taskIndex = sourceTasks.findIndex((t) => t.id === active.id);
+      const [movedTask] = sourceTasks.splice(taskIndex, 1);
+      destTasks.push(movedTask);
+
+      setColumns({
+        ...columns,
+        [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
+        [destColId]: { ...columns[destColId], tasks: destTasks },
+      });
     }
-
-    // Handle COLUMN drag
-    if (active.data.current?.type === "column") {
-      const oldIndex = columnOrder.indexOf(active.data.current.column.id);
-      const newIndex = columnOrder.indexOf(over.data.current?.column?.id);
-      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        const newOrder = [...columnOrder];
-        const [moved] = newOrder.splice(oldIndex, 1);
-        newOrder.splice(newIndex, 0, moved);
-        setColumnOrder(newOrder);
-      }
-      setActiveColumn(null);
-      return;
-    }
-
-    // Handle TASK drag
-    if (active.data.current?.type === "task") {
-      const sourceColId = findColumnId(active.id);
-      const destColId = over.data.current?.column?.id;
-
-      if (!sourceColId || !destColId) return;
-
-      if (sourceColId !== destColId) {
-        const sourceTasks = [...columns[sourceColId].tasks];
-        const destTasks = [...columns[destColId].tasks];
-
-        const taskIndex = sourceTasks.findIndex((t) => t.id === active.id);
-        const [movedTask] = sourceTasks.splice(taskIndex, 1);
-        destTasks.push(movedTask);
-
-        setColumns({
-          ...columns,
-          [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
-          [destColId]: { ...columns[destColId], tasks: destTasks },
-        });
-      }
-      setActiveTask(null);
-      recalc();
-    }
+    setActiveTask(null);
+    recalc();
   };
 
   return (
@@ -203,54 +174,18 @@ function TaskManagement() {
 
       {/* Columns */}
       <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div
-          ref={parentRef}
-          className="task-parent-columns flex-1 min-h-0 overflow-x-auto flex space-x-3 px-6 py-6"
-        >
-          {columnOrder.map((colId) => {
-            const col = columns[colId];
-            return (
-              <TaskColumn
-                key={col.id}
-                id={col.id}
-                title={col.title}
-                color={col.color}
-                threeDotsIcon={threeDotsIcon}
-              >
-                {col.tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    id={task.id}
-                    title={task.title}
-                    description={task.description}
-                    threeDotsIcon={threeDotsIcon}
-                  />
-                ))}
-              </TaskColumn>
-            );
-          })}
+        <div ref={parentRef} className="task-parent-columns flex-1 min-h-0 overflow-x-auto flex space-x-3 px-6 py-6">
+          {Object.values(columns).map((col) => (
+            <TaskColumn key={col.id} id={col.id} title={col.title} color={col.color} threeDotsIcon={threeDotsIcon}>
+              {col.tasks.map((task) => (
+                <TaskCard key={task.id} id={task.id} title={task.title} description={task.description} threeDotsIcon={threeDotsIcon} />
+              ))}
+            </TaskColumn>
+          ))}
         </div>
-
-        {/* DragOverlay for smooth previews */}
         <DragOverlay>
           {activeTask ? (
-            <TaskCard
-              id={activeTask.id}
-              title={activeTask.title}
-              description={activeTask.description}
-              threeDotsIcon={threeDotsIcon}
-            />
-          ) : activeColumn ? (
-            <div className="w-72">
-              <TaskColumn
-                id={activeColumn.id}
-                title={activeColumn.title}
-                color={columns[activeColumn.id].color}
-                threeDotsIcon={threeDotsIcon}
-              >
-                {/* No children in overlay */}
-              </TaskColumn>
-            </div>
+            <TaskCard id={activeTask.id} title={activeTask.title} description={activeTask.description} threeDotsIcon={threeDotsIcon} />
           ) : null}
         </DragOverlay>
       </DndContext>
