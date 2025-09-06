@@ -10,13 +10,14 @@ import EditProject from "./EditProject";
 function Home() {
   const { user } = useUser();
   const navigate = useNavigate();
-  const [setshowCreateProject, setsetshowCreateProject] = useState(false);
+  const [showCreateProject, setshowCreateProject] = useState(false);
   const [projects, setProjects] = useState([]);
   const [showEditingProject, setshowEditingProject] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
+  
+  
   //icons
-
   const editIcon = 
       <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -98,7 +99,7 @@ function Home() {
           }
         });
     }
-    setsetshowCreateProject(false);
+    setshowCreateProject(false);
   };
 
   //open project
@@ -154,7 +155,7 @@ function Home() {
             <button
               type="button"
               className="bg-[var(--primary)] text-[var(--bg-light)] px-6 py-2 rounded-lg hover:opacity-90 transition"
-              onClick={() => setsetshowCreateProject(true)}
+              onClick={() => setshowCreateProject(true)}
             >
               <b>CREATE PROJECT</b>
             </button>
@@ -212,9 +213,9 @@ function Home() {
         </div>
 
         {/* Modals */}
-        {setshowCreateProject && (
+        {showCreateProject && (
           <CreateProject
-            onClose={() => setsetshowCreateProject(false)}
+            onClose={() => setshowCreateProject(false)}
             onCreate={handleCreateProject}
           />
         )}

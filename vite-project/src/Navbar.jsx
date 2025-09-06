@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "./UserContext";
+import ConfirmDialog from "./ConfirmDialog";
 
 function Navbar() {
   const { user, setUser } = useUser();
   const [theme, setTheme] = useState("dark");
   const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
+  
+  // show confirm logout
+  const handleLogoutConfirm = () => {
+    setShowConfirm(true);
+  }
 
   useEffect(() => {
     document.body.classList.remove("light", "dark");
@@ -80,7 +87,7 @@ function Navbar() {
 
         {/* Logout */}
         <button
-          onClick={handleLogout}
+          onClick={handleLogoutConfirm}
           className="p-2 rounded-full hover:bg-[var(--danger)]/20 transition"
           aria-label="Log out"
         >
@@ -99,6 +106,16 @@ function Navbar() {
           </svg>
         </button>
       </div>
+
+      
+        {/* Confirm Log out */}
+        <ConfirmDialog
+          isOpen={showConfirm}
+          title="Log out?"
+          message="Are you sure you want to log out?"
+          onConfirm={() => handleLogout()}
+          onCancel={() => setShowConfirm(false)}
+        />
     </nav>
   );
 }
