@@ -12,8 +12,6 @@ import CreateTasks from "./CreateTasks";
 
 
 function TaskManagement() {
-  const [editingProject, setEditingProject] = useState(null);
-
   // icons
   const threeDotsIcon = (
     <svg
@@ -48,31 +46,6 @@ function TaskManagement() {
     />
   </svg>;
 
-  // board state preset
-  const [columns, setColumns] = useState({
-      todo: {
-        id: "todo",
-        title: "To Do",
-        color:  "hsl(140 35% 30%)", // Muted green
-
-        tasks: [
-          { id: "t1", title: "Task 1", description: "Example task 1" },
-          { id: "t2", title: "Task 2", description: "Example task 2" },
-        ],
-      },
-      inprogress: {
-        id: "inprogress",
-        title: "In Progress",
-        color: "hsl(45 40% 30%)",  // Muted yellow
-        tasks: [{ id: "t3", title: "Task 3", description: "Example task 3" }],
-      },
-      done: {
-        id: "done",
-        title: "Done",
-        color: "hsl(270 35% 30%)", // Muted violet
-        tasks: [],
-      },
-  });
 
   const [activeTask, setActiveTask] = useState(null);
 
@@ -187,38 +160,6 @@ function TaskManagement() {
     recalc(); // trigger recalculation after dropping
   };
 
-  // handle column creation
-  const handleSaveColumn = ({ title, description, color }) => {
-    const id = title.toLowerCase().replace(/\s+/g, "-");
-    setColumns({
-      ...columns,
-      [id]: { id, title, description, color, tasks: [] },
-    });
-    setShowCreateColumn(false);
-  };
-
-  // handle task creation
-  const handleSaveTask = ({ title, description }) => {
-    const colId = showCreateTask;
-    if (!colId) return;
-
-    const newTask = {
-      id: `${colId}-${Date.now()}`,
-      title,
-      description,
-    };
-
-    setColumns({
-      ...columns,
-      [colId]: {
-        ...columns[colId],
-        tasks: [...columns[colId].tasks, newTask],
-      },
-    });
-
-    setShowCreateTask(null);
-  };
-
   return (
     <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
       <Navbar/>
@@ -244,7 +185,7 @@ function TaskManagement() {
       <div className="task-tools flex items-center space-x-3 px-6 py-3 bg-[var(--bg)] border-b border-[var(--border)]">
         <button
           type="button"
-          onClick={() => setShowCreateColumn(true)}
+          // onClick={() => setShowCreateColumn(true)}
           className="px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition"
         >
           Create Column
@@ -260,42 +201,27 @@ function TaskManagement() {
       </div>
 
       {/* Columns - attach parentRef here */}
-      <DndContext
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div
-          ref={parentRef}
-          className="task-parent-columns flex-1 min-h-0 overflow-x-auto flex space-x-3 px-6 py-6"
-        >
-          {Object.values(columns).map((col) => (
-            <TaskColumn
-              key={col.id}
-              column={col}
-              threeDotsIcon={threeDotsIcon}
-              onAddTask={(columnId, task) => {
-                setColumns((prev) => ({
-                  ...prev,
-                  [columnId]: {
-                    ...prev[columnId],
-                    tasks: [
-                      ...prev[columnId].tasks,
-                      { id: Date.now().toString(), ...task }, // generate unique id
-                    ],
-                  },
-                }));
-              }}
-            />
-          ))}
-        </div>
+      <DndContext collisionDetection={closestCorners}>
+        <div className="task-parent-columns flex-1 min-h-0 overflow-x-auto flex space-x-3 px-6 py-6">
 
-        {/* Drag overlay (preview while dragging) */}
-        <DragOverlay>
-          {activeTask ? (
-            <TaskCard task={activeTask} threeDotsIcon={threeDotsIcon} />
-          ) : null}
-        </DragOverlay>
+          {/* To Do */}
+          <TaskColumn id="todo" title="To Do" color="hsl(140 35% 30%)" threeDotsIcon={threeDotsIcon}>
+            <TaskCard id="t1" title="Task 1" description="Example task 1" threeDotsIcon={threeDotsIcon} />
+            <TaskCard id="t2" title="Task 2" description="Example task 2" threeDotsIcon={threeDotsIcon} />
+          </TaskColumn>
+
+          {/* In Progress */}
+          <TaskColumn id="inprogress" title="In Progress" color="hsl(45 40% 30%)" threeDotsIcon={threeDotsIcon}>
+            <TaskCard id="t3" title="Task 3" description="Example task 3" threeDotsIcon={threeDotsIcon} />
+          </TaskColumn>
+
+          {/* Done */}
+          <TaskColumn id="done" title="Done" color="hsl(270 35% 30%)" threeDotsIcon={threeDotsIcon}>
+            {/* empty for now */}
+          </TaskColumn>
+
+        </div>
+        <DragOverlay>{/* keep empty for now */}</DragOverlay>
       </DndContext>
 
       {/* Popups */}
