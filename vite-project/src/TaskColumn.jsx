@@ -1,7 +1,7 @@
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableContext, verticalListSortingStrategy, arrayMove  } from "@dnd-kit/sortable";
 
-function TaskColumn({ id, title, color, children, threeDotsIcon, tasks }) {
+function TaskColumn({ id, title, color, children, threeDotsIcon, tasks, dragHandle }) {
   const { setNodeRef, isOver } = useDroppable({
     id,
     data: { column: { id, title } },
@@ -12,7 +12,10 @@ function TaskColumn({ id, title, color, children, threeDotsIcon, tasks }) {
       className="task-column flex shrink-0 flex-col w-72 min-h-full bg-[var(--bg)] rounded-xl shadow-md border"
       style={{ borderColor: color || "var(--border)" }}
     >
-      <div className="task-column-header flex items-center justify-between px-4 py-2 border-b border-[var(--border)]">
+      <div
+        className="task-column-header flex items-center justify-between px-4 py-2 border-b border-[var(--border)] cursor-grab"
+        {...dragHandle} // ✅ drag handle works now
+      >
         <span className="font-semibold">{title}</span>
         <button className="text-xl text-[var(--text-muted)] hover:text-[var(--text)] transition">
           {threeDotsIcon}
@@ -28,7 +31,10 @@ function TaskColumn({ id, title, color, children, threeDotsIcon, tasks }) {
         </SortableContext>
       </div>
 
-      <button type="button" className="task-addtask px-4 py-2 text-left text-[var(--secondary)] font-medium hover:underline">
+      <button
+        type="button"
+        className="task-addtask px-4 py-2 text-left text-[var(--secondary)] font-medium hover:underline"
+      >
         + Add task
       </button>
     </div>

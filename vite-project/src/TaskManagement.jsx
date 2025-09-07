@@ -1,14 +1,9 @@
 import { useState, useRef, useLayoutEffect } from "react";
-import {
-  DndContext,
-  closestCorners,
-  DragOverlay,
-} from "@dnd-kit/core";
+import {DndContext,closestCorners,DragOverlay,} from "@dnd-kit/core";
 import Navbar from "./Navbar";
-import TaskColumn from "./TaskColumn";
 import TaskCard from "./TaskCard";
-import CreateColumn from "./CreateColumn";
-import CreateTasks from "./CreateTasks";
+import { SortableContext, horizontalListSortingStrategy, arrayMove  } from "@dnd-kit/sortable";
+import SortableColumn from "./SortableColumn"; // <== use this wrapper
 
 function TaskManagement() {
 
@@ -113,55 +108,84 @@ function TaskManagement() {
     );
   };
 
-  const handleDragStart = (event) => {
+const handleDragStart = (event) => {
+  if (event.active.data.current?.type === "task") {
     setActiveTask(event.active.data.current.task);
-  };
+  }
+};
 
 const handleDragEnd = (event) => {
   const { active, over } = event;
   if (!over) return;
 
-  const sourceColId = findColumnId(active.id);
-  const destColId = over.data.current?.column?.id || findColumnId(over.id);
+  const activeType = active.data.current?.type;
+  const overType = over.data.current?.type;
 
-  if (!sourceColId || !destColId) return;
+  // column reorder
+  if (activeType === "column" && overType === "column") {
+    const oldIndex = Object.keys(columns).indexOf(active.id);
+    const newIndex = Object.keys(columns).indexOf(over.id);
 
-  // If task stays in the same column
-  if (sourceColId === destColId) {
-    const sourceTasks = [...columns[sourceColId].tasks];
-    const fromIndex = findTaskIndex(sourceColId, active.id);
-    const toIndex = findTaskIndex(destColId, over.id);
+    if (oldIndex !== newIndex) {
+      const ordered = Object.fromEntries(
+        arrayMove(Object.entries(columns), oldIndex, newIndex)
+      );
+      setColumns(ordered);
+    }
 
-    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+    return;
+  }
+
+  // task move
+  if (activeType === "task") {
+    const sourceColId = findColumnId(active.id);
+
+    // dest could be:
+    // 1) a tasks droppable (over.data.current.column.id)
+    // 2) the column sortable wrapper (over.id is a column id)
+    // 3) a task id inside a column (findColumnId(over.id))
+    const destColId =
+      over.data.current?.column?.id ??
+      (Object.keys(columns).includes(over.id) ? over.id : findColumnId(over.id));
+
+    if (!sourceColId || !destColId) {
+      setActiveTask(null);
+      return;
+    }
+
+    // determine insertion index. if over is a task, get its index. otherwise append.
+    const toIndex =
+      over.data.current?.type === "task" ? findTaskIndex(destColId, over.id) : -1;
+
+    if (sourceColId === destColId) {
+      const sourceTasks = [...columns[sourceColId].tasks];
+      const fromIndex = findTaskIndex(sourceColId, active.id);
+
+      if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+        const [movedTask] = sourceTasks.splice(fromIndex, 1);
+        sourceTasks.splice(toIndex, 0, movedTask);
+
+        setColumns({
+          ...columns,
+          [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
+        });
+      }
+    } else {
+      const sourceTasks = [...columns[sourceColId].tasks];
+      const destTasks = [...columns[destColId].tasks];
+
+      const fromIndex = findTaskIndex(sourceColId, active.id);
       const [movedTask] = sourceTasks.splice(fromIndex, 1);
-      sourceTasks.splice(toIndex, 0, movedTask);
+
+      if (toIndex >= 0) destTasks.splice(toIndex, 0, movedTask);
+      else destTasks.push(movedTask);
 
       setColumns({
         ...columns,
         [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
+        [destColId]: { ...columns[destColId], tasks: destTasks },
       });
     }
-  } else {
-    // If task moves to another column
-    const sourceTasks = [...columns[sourceColId].tasks];
-    const destTasks = [...columns[destColId].tasks];
-
-    const fromIndex = findTaskIndex(sourceColId, active.id);
-    const toIndex = findTaskIndex(destColId, over.id);
-
-    const [movedTask] = sourceTasks.splice(fromIndex, 1);
-
-    if (toIndex >= 0) {
-      destTasks.splice(toIndex, 0, movedTask); // insert at position
-    } else {
-      destTasks.push(movedTask); // if dropped on empty column
-    }
-
-    setColumns({
-      ...columns,
-      [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
-      [destColId]: { ...columns[destColId], tasks: destTasks },
-    });
   }
 
   setActiveTask(null);
@@ -198,42 +222,54 @@ const handleDragEnd = (event) => {
       </div>
 
       {/* Columns */}
-      <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div ref={parentRef} className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6">
-          {Object.values(columns).map((col) => (
-            <TaskColumn
-              key={col.id}
-              id={col.id}
-              title={col.title}
-              color={col.color}
-              tasks={col.tasks}       // needed for SortableContext
-              threeDotsIcon={threeDotsIcon}
-            >
-              {col.tasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  id={task.id}
-                  title={task.title}
-                  description={task.description}
-                  threeDotsIcon={threeDotsIcon}
-                />
-              ))}
-            </TaskColumn>
-          ))}
-        </div>
-        <DragOverlay>
-          {activeTask ? (
+<DndContext
+  collisionDetection={closestCorners}
+  onDragStart={handleDragStart}
+  onDragEnd={handleDragEnd}
+>
+  <SortableContext
+    items={Object.keys(columns)} 
+    strategy={horizontalListSortingStrategy}
+  >
+    <div
+      ref={parentRef}
+      className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6"
+    >
+      {Object.values(columns).map((col) => (
+        <SortableColumn
+          key={col.id}
+          id={col.id}
+          title={col.title}
+          color={col.color}
+          tasks={col.tasks}
+          threeDotsIcon={threeDotsIcon}
+        >
+          {col.tasks.map((task) => (
             <TaskCard
-              id={activeTask.id}
-              title={activeTask.title}
-              description={activeTask.description}
+              key={task.id}
+              id={task.id}
+              title={task.title}
+              description={task.description}
               threeDotsIcon={threeDotsIcon}
-              isOverlay={true} // overlay styling
             />
-          ) : null}
-        </DragOverlay>
+          ))}
+        </SortableColumn>
+      ))}
+    </div>
+  </SortableContext>
 
-      </DndContext>
+  <DragOverlay>
+    {activeTask ? (
+      <TaskCard
+        id={activeTask.id}
+        title={activeTask.title}
+        description={activeTask.description}
+        threeDotsIcon={threeDotsIcon}
+        isOverlay={true}
+      />
+    ) : null}
+  </DragOverlay>
+</DndContext>
     </div>
   );
 }
