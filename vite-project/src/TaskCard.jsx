@@ -2,8 +2,10 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 function TaskCard({ id, title, description, threeDotsIcon, isOverlay }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id });
+const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+useSortable({ id, data: { type: "task", task: { id, title, description } } });
+
+
 
   const style = isOverlay
     ? {

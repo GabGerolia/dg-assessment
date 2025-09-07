@@ -4,17 +4,18 @@ import {
   closestCorners,
   DragOverlay,
 } from "@dnd-kit/core";
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import Navbar from "./Navbar";
-import TaskColumn from "./TaskColumn";
+import SortableColumn from "./SortableColumn";
 import TaskCard from "./TaskCard";
-import CreateColumn from "./CreateColumn";
-import CreateTasks from "./CreateTasks";
 
 function TaskManagement() {
-
   const findTaskIndex = (colId, taskId) => {
-  return columns[colId].tasks.findIndex((t) => t.id === taskId);
-};
+    return columns[colId].tasks.findIndex((t) => t.id === taskId);
+  };
 
   // icons
   const threeDotsIcon = (
@@ -63,13 +64,13 @@ function TaskManagement() {
   const [activeTask, setActiveTask] = useState(null);
   const parentRef = useRef(null);
 
-  // ===== height recalculation logic (your code kept) =====
+  // ===== height recalculation logic (kept) =====
   const recalc = () => {
     const parent = parentRef.current;
     if (!parent) return;
 
-    const columns = parent.querySelectorAll(".task-column");
-    columns.forEach((col) => {
+    const columnsEls = parent.querySelectorAll(".task-column");
+    columnsEls.forEach((col) => {
       const header = col.querySelector(".task-column-header");
       const footer = col.querySelector(".task-addtask");
       const tasks = col.querySelector(".task-tasks");
@@ -106,68 +107,96 @@ function TaskManagement() {
     };
   }, []);
 
-  // ===== dnd handlers =====
+  // ===== helpers =====
   const findColumnId = (taskId) => {
     return Object.keys(columns).find((colId) =>
       columns[colId].tasks.some((t) => t.id === taskId)
     );
   };
 
+  // ===== dnd handlers =====
   const handleDragStart = (event) => {
-    setActiveTask(event.active.data.current.task);
+    if (event.active.data.current?.type === "task") {
+      setActiveTask(event.active.data.current.task);
+    }
   };
 
-const handleDragEnd = (event) => {
-  const { active, over } = event;
-  if (!over) return;
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over) return;
 
-  const sourceColId = findColumnId(active.id);
-  const destColId = over.data.current?.column?.id || findColumnId(over.id);
+    const activeType = active.data.current?.type;
+    const overType = over.data.current?.type;
 
-  if (!sourceColId || !destColId) return;
+    // ---- column reordering ----
+    if (activeType === "column" && overType === "column") {
+      const colIds = Object.keys(columns);
+      const fromIndex = colIds.indexOf(active.id);
+      const toIndex = colIds.indexOf(over.id);
 
-  // If task stays in the same column
-  if (sourceColId === destColId) {
-    const sourceTasks = [...columns[sourceColId].tasks];
-    const fromIndex = findTaskIndex(sourceColId, active.id);
-    const toIndex = findTaskIndex(destColId, over.id);
+      if (fromIndex !== -1 && toIndex !== -1) {
+        const newOrder = [...colIds];
+        newOrder.splice(fromIndex, 1);
+        newOrder.splice(toIndex, 0, active.id);
 
-    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-      const [movedTask] = sourceTasks.splice(fromIndex, 1);
-      sourceTasks.splice(toIndex, 0, movedTask);
+        const newColumns = {};
+        newOrder.forEach((id) => {
+          newColumns[id] = columns[id];
+        });
 
-      setColumns({
-        ...columns,
-        [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
-      });
-    }
-  } else {
-    // If task moves to another column
-    const sourceTasks = [...columns[sourceColId].tasks];
-    const destTasks = [...columns[destColId].tasks];
-
-    const fromIndex = findTaskIndex(sourceColId, active.id);
-    const toIndex = findTaskIndex(destColId, over.id);
-
-    const [movedTask] = sourceTasks.splice(fromIndex, 1);
-
-    if (toIndex >= 0) {
-      destTasks.splice(toIndex, 0, movedTask); // insert at position
-    } else {
-      destTasks.push(movedTask); // if dropped on empty column
+        setColumns(newColumns);
+      }
     }
 
-    setColumns({
-      ...columns,
-      [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
-      [destColId]: { ...columns[destColId], tasks: destTasks },
-    });
-  }
+    // ---- task moving/reordering ----
+    if (activeType === "task" && (overType === "task" || overType === "column")) {
+      const sourceColId = findColumnId(active.id);
+      const destColId = over.data.current?.column?.id || findColumnId(over.id);
 
-  setActiveTask(null);
-  recalc();
-};
+      if (!sourceColId || !destColId) return;
 
+      if (sourceColId === destColId) {
+        // reorder inside same column
+        const sourceTasks = [...columns[sourceColId].tasks];
+        const fromIndex = findTaskIndex(sourceColId, active.id);
+        const toIndex = findTaskIndex(destColId, over.id);
+
+        if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+          const [movedTask] = sourceTasks.splice(fromIndex, 1);
+          sourceTasks.splice(toIndex, 0, movedTask);
+
+          setColumns({
+            ...columns,
+            [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
+          });
+        }
+      } else {
+        // move across columns
+        const sourceTasks = [...columns[sourceColId].tasks];
+        const destTasks = [...columns[destColId].tasks];
+
+        const fromIndex = findTaskIndex(sourceColId, active.id);
+        const toIndex = findTaskIndex(destColId, over.id);
+
+        const [movedTask] = sourceTasks.splice(fromIndex, 1);
+
+        if (toIndex >= 0) {
+          destTasks.splice(toIndex, 0, movedTask);
+        } else {
+          destTasks.push(movedTask);
+        }
+
+        setColumns({
+          ...columns,
+          [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
+          [destColId]: { ...columns[destColId], tasks: destTasks },
+        });
+      }
+    }
+
+    setActiveTask(null);
+    recalc();
+  };
 
   return (
     <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
@@ -200,27 +229,34 @@ const handleDragEnd = (event) => {
       {/* Columns */}
       <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div ref={parentRef} className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6">
-          {Object.values(columns).map((col) => (
-            <TaskColumn
-              key={col.id}
-              id={col.id}
-              title={col.title}
-              color={col.color}
-              tasks={col.tasks}       // needed for SortableContext
-              threeDotsIcon={threeDotsIcon}
-            >
-              {col.tasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  id={task.id}
-                  title={task.title}
-                  description={task.description}
-                  threeDotsIcon={threeDotsIcon}
-                />
-              ))}
-            </TaskColumn>
-          ))}
+<SortableContext
+  items={Object.keys(columns)}
+  strategy={horizontalListSortingStrategy}
+>
+  {Object.values(columns).map((col) => (
+    <SortableColumn
+      key={col.id}
+      id={col.id}
+      title={col.title}
+      color={col.color}
+      tasks={col.tasks}
+      threeDotsIcon={threeDotsIcon}
+    >
+      {col.tasks.map((task) => (
+        <TaskCard
+          key={task.id}
+          id={task.id}
+          title={task.title}
+          description={task.description}
+          threeDotsIcon={threeDotsIcon}
+        />
+      ))}
+    </SortableColumn>
+  ))}
+</SortableContext>
+
         </div>
+
         <DragOverlay>
           {activeTask ? (
             <TaskCard
@@ -228,11 +264,10 @@ const handleDragEnd = (event) => {
               title={activeTask.title}
               description={activeTask.description}
               threeDotsIcon={threeDotsIcon}
-              isOverlay={true} // overlay styling
+              isOverlay={true}
             />
           ) : null}
         </DragOverlay>
-
       </DndContext>
     </div>
   );
