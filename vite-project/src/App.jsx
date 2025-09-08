@@ -15,7 +15,6 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/try" element={<CreateTasks />} /> {/* for testing only */}
-        {/* route now accepts a projectId param */}
         <Route path="/TaskManagement/:projectId" element={<TaskManagement />} />
       </Routes>
     </UserProvider>

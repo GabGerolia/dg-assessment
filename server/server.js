@@ -25,6 +25,23 @@ db.connect((err) => {
   console.log("Connected to MySQL database.");
 });
 
+// Get a single project by ID
+app.get("/api/project/:id", (req, res) => {
+  const { id } = req.params;
+  const sql = "SELECT * FROM projects WHERE id = ?";
+  db.query(sql, [id], (err, results) => {
+    if (err) {
+      console.error("Error fetching project:", err);
+      return res.status(500).json({ success: false, error: "Database error" });
+    }
+    if (results.length === 0) {
+      return res.json({ success: false, message: "Project not found" });
+    }
+    res.json({ success: true, project: results[0] });
+  });
+});
+
+
 
 //fetch login info
 app.post("/api/login", (req, res) => {

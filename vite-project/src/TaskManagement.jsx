@@ -13,13 +13,19 @@ import EditProject from "./EditProject";
 
 function TaskManagement() {
   //fetch project title and description 
-const location = useLocation();
-const project = location.state?.project; 
+  const { projectId } = useParams(); // comes from /TaskManagement/:projectId
+  const [project, setProject] = useState(null);
 
+  useEffect(() => {
+    axios.get(`http://localhost:8080/api/project/${projectId}`)
+      .then(res => {
+        if (res.data.success) {
+          setProject(res.data.project);
+        }
+      })
+      .catch(err => console.error("Error fetching project:", err));
+  }, [projectId]);
 
-  const findTaskIndex = (colId, taskId) => {
-  return columns[colId].tasks.findIndex((t) => t.id === taskId);
-};
 
   // icons
   const threeDotsIcon = (
@@ -43,24 +49,21 @@ const project = location.state?.project;
   //editing project title/description
   const [showEditingProject, setShowEditingProject] = useState(false);
   const handleUpdateProject = (updatedProject) => {
-      axios.put(`http://localhost:8080/api/projects/${updatedProject.id}`, {
-        title: updatedProject.title,
-        description: updatedProject.description,
-      })
-      .then((res) => {
-        if (res.data.success) {
-          // If you have a local projects state, update it here
-          // Otherwise, just update the passed-in project
-          project.title = updatedProject.title;
-          project.description = updatedProject.description;
-
-          setShowEditingProject(null);
-        }
-      });
-    project.title = updatedProject.title;
-    project.description = updatedProject.description;
-
-    setShowEditingProject(false);
+    axios.put(`http://localhost:8080/api/projects/${project.id}`, {
+      title: updatedProject.title,
+      description: updatedProject.description,
+    })
+    .then((res) => {
+      if (res.data.success) {
+        // update local state immediately
+        setProject((prev) => ({
+          ...prev,
+          title: updatedProject.title,
+          description: updatedProject.description,
+        }));
+        setShowEditingProject(false);
+      }
+    });
   };
 
 
