@@ -6,8 +6,13 @@ import { SortableContext, horizontalListSortingStrategy, arrayMove  } from "@dnd
 import SortableColumn from "./SortableColumn"; // <== use this wrapper
 import CreateColumn from "./CreateColumn";
 import CreateTasks from "./CreateTasks";
+import { useLocation } from "react-router-dom";
 
 function TaskManagement() {
+  //fetch project title and description 
+const location = useLocation();
+const project = location.state?.project; 
+
 
   const findTaskIndex = (colId, taskId) => {
   return columns[colId].tasks.findIndex((t) => t.id === taskId);
@@ -242,9 +247,9 @@ const handleDragEnd = (event) => {
 
       {/* Title */}
       <div className="task-title relative w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
-        <h1 className="text-2xl font-bold mb-1">Example fetched Title</h1>
+        <h1 className="text-2xl font-bold mb-1">{project?.title || "Unfetched Title"}</h1>
         <p className="text-[var(--text-muted)] max-h-[4.5rem] overflow-y-auto leading-snug">
-          Example fetched descriptions.
+          {project?.description || "No description provided."}
         </p>
         <button
           type="button"
