@@ -7,6 +7,8 @@ import SortableColumn from "./SortableColumn"; // <== use this wrapper
 import CreateColumn from "./CreateColumn";
 import CreateTasks from "./CreateTasks";
 import { useLocation } from "react-router-dom";
+import EditProject from "./EditProject";
+import axios from "axios";
 
 function TaskManagement() {
   //fetch project title and description 
@@ -36,6 +38,30 @@ const project = location.state?.project;
         d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
     </svg>
   );
+
+  //editing project title/description
+  const [showEditingProject, setShowEditingProject] = useState(false);
+  const handleUpdateProject = (updatedProject) => {
+      axios.put(`http://localhost:8080/api/projects/${updatedProject.id}`, {
+        title: updatedProject.title,
+        description: updatedProject.description,
+      })
+      .then((res) => {
+        if (res.data.success) {
+          // If you have a local projects state, update it here
+          // Otherwise, just update the passed-in project
+          project.title = updatedProject.title;
+          project.description = updatedProject.description;
+
+          setShowEditingProject(null);
+        }
+      });
+    project.title = updatedProject.title;
+    project.description = updatedProject.description;
+
+    setShowEditingProject(false);
+  };
+
 
   // columns + tasks state
   const [columns, setColumns] = useState({
@@ -254,6 +280,8 @@ const handleDragEnd = (event) => {
         <button
           type="button"
           className="absolute top-4 right-6 text-[var(--text-muted)] hover:text-[var(--primary)] transition"
+          onClick={() => setShowEditingProject(true)}  
+        
         >
           {editIcon}
         </button>
@@ -326,12 +354,21 @@ const handleDragEnd = (event) => {
               onSave={handleSaveColumn}
             />
           )}
-
-        </DndContext> {/* Create Task Modal */}
+        </DndContext> {
+        
+        /* Create Task Modal */}
           {showCreateTasks && (
           <CreateTasks
             onClose={() => setShowCreateTasks(null)}
             onSave={(task) => handleSaveTask(showCreateTasks, task)}
+          />
+        )}
+
+        {showEditingProject && ( 
+          <EditProject 
+            project={project}
+            onClose={() => setShowEditingProject(false)}
+            onUpdate={handleUpdateProject}
           />
         )}
 
