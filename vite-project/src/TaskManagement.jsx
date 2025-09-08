@@ -1,14 +1,15 @@
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import {DndContext,closestCorners,DragOverlay,} from "@dnd-kit/core";
+import { SortableContext, horizontalListSortingStrategy, arrayMove  } from "@dnd-kit/sortable";
+import { useLocation } from "react-router-dom";
+import axios from "axios";
+
 import Navbar from "./Navbar";
 import TaskCard from "./TaskCard";
-import { SortableContext, horizontalListSortingStrategy, arrayMove  } from "@dnd-kit/sortable";
-import SortableColumn from "./SortableColumn"; // <== use this wrapper
+import SortableColumn from "./SortableColumn"; 
 import CreateColumn from "./CreateColumn";
 import CreateTasks from "./CreateTasks";
-import { useLocation } from "react-router-dom";
 import EditProject from "./EditProject";
-import axios from "axios";
 
 function TaskManagement() {
   //fetch project title and description 
