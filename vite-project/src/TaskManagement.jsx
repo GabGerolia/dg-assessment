@@ -1,7 +1,7 @@
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import {DndContext,closestCorners,DragOverlay,} from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, arrayMove  } from "@dnd-kit/sortable";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 
 import Navbar from "./Navbar";
