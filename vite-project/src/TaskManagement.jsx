@@ -5,6 +5,7 @@ import TaskCard from "./TaskCard";
 import { SortableContext, horizontalListSortingStrategy, arrayMove  } from "@dnd-kit/sortable";
 import SortableColumn from "./SortableColumn"; // <== use this wrapper
 import CreateColumn from "./CreateColumn";
+import CreateTasks from "./CreateTasks";
 
 function TaskManagement() {
 
@@ -55,7 +56,7 @@ function TaskManagement() {
       tasks: [],
     },
   });
-  const [showCreateColumn, setShowCreateColumn] = useState(false);
+  const [showCreateColumn, setShowCreateColumn] = useState(false); //creation of columns
   const handleSaveColumn = ({ title, color }) => {
       // make safe id (lowercase, remove spaces, add timestamp)
       const newId = `${title.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
@@ -74,8 +75,31 @@ function TaskManagement() {
 
       setShowCreateColumn(false);
     };
-  const [activeTask, setActiveTask] = useState(null);
-  const parentRef = useRef(null);
+
+  //creation of tasks
+  const [showCreateTasks, setShowCreateTasks] = useState(null); 
+  const handleSaveTask = (colId, { title, description }) => {
+  const newTask = {
+    id: `task-${Date.now()}`, 
+    title,
+    description,
+  };
+
+  setColumns((prev) => ({
+    ...prev,
+    [colId]: {
+      ...prev[colId],
+      tasks: [...prev[colId].tasks, newTask],
+    },
+  }));
+
+  setShowCreateTasks(null);
+};
+
+
+  // currently dragged task
+  const [activeTask, setActiveTask] = useState(null); 
+  const parentRef = useRef(null); 
 
   // ===== height recalculation logic (your code kept) =====
   const recalc = () => {
@@ -256,25 +280,26 @@ const handleDragEnd = (event) => {
               className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6"
             >
               {Object.values(columns).map((col) => (
-                <SortableColumn
-                  key={col.id}
-                  id={col.id}
-                  title={col.title}
-                  color={col.color}
-                  tasks={col.tasks}
-                  threeDotsIcon={threeDotsIcon}
-                >
-                  {col.tasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      id={task.id}
-                      title={task.title}
-                      description={task.description}
-                      threeDotsIcon={threeDotsIcon}
-                    />
-                  ))}
-                </SortableColumn>
-              ))}
+              <SortableColumn
+                key={col.id}
+                id={col.id}
+                title={col.title}
+                color={col.color}
+                tasks={col.tasks}
+                threeDotsIcon={threeDotsIcon}
+                onAddTask={(colId) => setShowCreateTasks(colId)} // ✅ new
+              >
+                {col.tasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    id={task.id}
+                    title={task.title}
+                    description={task.description}
+                    threeDotsIcon={threeDotsIcon}
+                  />
+                ))}
+              </SortableColumn>
+            ))}
             </div>
           </SortableContext>
 
@@ -289,14 +314,22 @@ const handleDragEnd = (event) => {
               />
             ) : null}
 
-          </DragOverlay>
+          </DragOverlay> {/* Create Column Modal */}
           {showCreateColumn && (
             <CreateColumn
               onClose={() => setShowCreateColumn(false)}
               onSave={handleSaveColumn}
             />
           )}
-        </DndContext>
+
+        </DndContext> {/* Create Task Modal */}
+          {showCreateTasks && (
+          <CreateTasks
+            onClose={() => setShowCreateTasks(null)}
+            onSave={(task) => handleSaveTask(showCreateTasks, task)}
+          />
+        )}
+
     </div>
   );
 }

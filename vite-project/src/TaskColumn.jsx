@@ -1,7 +1,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove  } from "@dnd-kit/sortable";
 
-function TaskColumn({ id, title, color, children, threeDotsIcon, tasks, dragHandle }) {
+function TaskColumn({ id, title, color, children, threeDotsIcon, tasks, dragHandle, onAddTask }) {
   const { setNodeRef, isOver } = useDroppable({
     id,
     data: { column: { id, title } },
@@ -34,6 +34,7 @@ function TaskColumn({ id, title, color, children, threeDotsIcon, tasks, dragHand
       <button
         type="button"
         className="task-addtask px-4 py-2 text-left text-[var(--secondary)] font-medium hover:underline"
+        onClick={() => onAddTask(id)} 
       >
         + Add task
       </button>
