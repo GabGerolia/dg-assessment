@@ -105,7 +105,7 @@ function Home() {
   //open project
   const handleOpenProject = (project) => {
     // navigate and pass project in location.state so TaskManagement can read it
-    navigate(`/TaskManagement/${project.id}`, { state: { project } });
+    navigate(`/TaskManagement/${project.title}`, { state: { project } });
   };
 
   // Delete
