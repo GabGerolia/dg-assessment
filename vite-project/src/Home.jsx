@@ -16,7 +16,7 @@ function Home() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
   
-  
+
   //icons
   const editIcon = 
       <svg
@@ -105,7 +105,7 @@ function Home() {
   //open project
   const handleOpenProject = (project) => {
     // navigate and pass project in location.state so TaskManagement can read it
-    navigate(`/TaskManagement/${project.title}`, { state: { project } });
+    navigate(`/TaskManagement/${project.id}`, { state: { project } });
   };
 
   // Delete
