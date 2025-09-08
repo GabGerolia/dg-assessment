@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 import TaskCard from "./TaskCard";
 import { SortableContext, horizontalListSortingStrategy, arrayMove  } from "@dnd-kit/sortable";
 import SortableColumn from "./SortableColumn"; // <== use this wrapper
+import CreateColumn from "./CreateColumn";
 
 function TaskManagement() {
 
@@ -54,7 +55,25 @@ function TaskManagement() {
       tasks: [],
     },
   });
+  const [showCreateColumn, setShowCreateColumn] = useState(false);
+  const handleSaveColumn = ({ title, color }) => {
+      // make safe id (lowercase, remove spaces, add timestamp)
+      const newId = `${title.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
 
+      const newColumn = {
+        id: newId,
+        title,
+        color,
+        tasks: [],
+      };
+
+      setColumns((prev) => ({
+        ...prev,
+        [newId]: newColumn,
+      }));
+
+      setShowCreateColumn(false);
+    };
   const [activeTask, setActiveTask] = useState(null);
   const parentRef = useRef(null);
 
@@ -213,7 +232,8 @@ const handleDragEnd = (event) => {
 
       {/* Tools */}
       <div className="task-tools flex items-center space-x-3 px-6 py-3 bg-[var(--bg)] border-b border-[var(--border)]">
-        <button type="button" className="px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition">
+        <button type="button" className="px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition"
+          onClick={() => setShowCreateColumn(true)}>
           Create Column
         </button>
         <button type="button" className="px-4 py-2 rounded-lg bg-[var(--secondary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition">
@@ -222,54 +242,61 @@ const handleDragEnd = (event) => {
       </div>
 
       {/* Columns */}
-<DndContext
-  collisionDetection={closestCorners}
-  onDragStart={handleDragStart}
-  onDragEnd={handleDragEnd}
->
-  <SortableContext
-    items={Object.keys(columns)} 
-    strategy={horizontalListSortingStrategy}
-  >
-    <div
-      ref={parentRef}
-      className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6"
-    >
-      {Object.values(columns).map((col) => (
-        <SortableColumn
-          key={col.id}
-          id={col.id}
-          title={col.title}
-          color={col.color}
-          tasks={col.tasks}
-          threeDotsIcon={threeDotsIcon}
+        <DndContext
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
         >
-          {col.tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              id={task.id}
-              title={task.title}
-              description={task.description}
-              threeDotsIcon={threeDotsIcon}
-            />
-          ))}
-        </SortableColumn>
-      ))}
-    </div>
-  </SortableContext>
+          <SortableContext
+            items={Object.keys(columns)} 
+            strategy={horizontalListSortingStrategy}
+          >
+            <div
+              ref={parentRef}
+              className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6"
+            >
+              {Object.values(columns).map((col) => (
+                <SortableColumn
+                  key={col.id}
+                  id={col.id}
+                  title={col.title}
+                  color={col.color}
+                  tasks={col.tasks}
+                  threeDotsIcon={threeDotsIcon}
+                >
+                  {col.tasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      id={task.id}
+                      title={task.title}
+                      description={task.description}
+                      threeDotsIcon={threeDotsIcon}
+                    />
+                  ))}
+                </SortableColumn>
+              ))}
+            </div>
+          </SortableContext>
 
-  <DragOverlay>
-    {activeTask ? (
-      <TaskCard
-        id={activeTask.id}
-        title={activeTask.title}
-        description={activeTask.description}
-        threeDotsIcon={threeDotsIcon}
-        isOverlay={true}
-      />
-    ) : null}
-  </DragOverlay>
-</DndContext>
+          <DragOverlay>
+            {activeTask ? (
+              <TaskCard
+                id={activeTask.id}
+                title={activeTask.title}
+                description={activeTask.description}
+                threeDotsIcon={threeDotsIcon}
+                isOverlay={true}
+              />
+            ) : null}
+
+          </DragOverlay>
+          {showCreateColumn && (
+            <CreateColumn
+              onClose={() => setShowCreateColumn(false)}
+              onSave={handleSaveColumn}
+            />
+          )}
+        </DndContext>
     </div>
   );
 }
