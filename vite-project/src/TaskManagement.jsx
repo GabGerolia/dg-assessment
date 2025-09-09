@@ -27,6 +27,10 @@ function TaskManagement() {
   }, [projectId]);
 
 
+  //helper to find task index in a column
+  const findTaskIndex = (colId, taskId) => {
+  return columns[colId].tasks.findIndex((t) => t.id === taskId);
+};
   // icons
   const threeDotsIcon = (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -318,14 +322,19 @@ const handleDragEnd = (event) => {
             >
               {Object.values(columns).map((col) => (
               <SortableColumn
-                key={col.id}
-                id={col.id}
-                title={col.title}
-                color={col.color}
-                tasks={col.tasks}
-                threeDotsIcon={threeDotsIcon}
-                onAddTask={(colId) => setShowCreateTasks(colId)} // ✅ new
+                  key={col.id}
+                  id={col.id}
+                  title={col.title}
+                  color={col.color}
+                  tasks={col.tasks}
+                  threeDotsIcon={threeDotsIcon}
+                  onAddTask={(colId) => setShowCreateTasks(colId)}
+                  onEdit={(colId) => console.log("Edit column", colId)}
+                  onDelete={(colId) => console.log("Delete column", colId)}
+                  onMoveLeft={(colId) => console.log("Move left", colId)}
+                  onMoveRight={(colId) => console.log("Move right", colId)}
               >
+
                 {col.tasks.map((task) => (
                   <TaskCard
                     key={task.id}
