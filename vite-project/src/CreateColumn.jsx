@@ -2,23 +2,27 @@ import { useState } from "react";
 
 function CreateColumn({ onClose, onSave }) {
   const [title, setTitle] = useState("");
-  const [reminder, setReminder] = useState(""); 
+  const [reminder, setReminder] = useState("");
   const [selectedColor, setSelectedColor] = useState("var(--border)"); // default is theme border
 
-    const presetColors = [
-        "hsl(340 40% 30%)", // Muted rose/pink
-        "hsl(190 45% 30%)", // Muted teal
-        "hsl(140 35% 30%)", // Muted green
-        "hsl(45 40% 30%)",  // Muted yellow
-        "hsl(25 45% 30%)",  // Muted orange
-        "hsl(210 50% 30%)", // Muted blue
-        "hsl(270 35% 30%)", // Muted violet
-    ];
+  const presetColors = [
+    "hsl(340 40% 30%)", // Muted rose/pink
+    "hsl(190 45% 30%)", // Muted teal
+    "hsl(140 35% 30%)", // Muted green
+    "hsl(45 40% 30%)",  // Muted yellow
+    "hsl(25 45% 30%)",  // Muted orange
+    "hsl(210 50% 30%)", // Muted blue
+    "hsl(270 35% 30%)", // Muted violet
+  ];
 
 
   const handleSave = () => {
     if (!title.trim()) {
       setReminder("Column title cannot be empty.");
+      return;
+    }
+    if (title.length > 20) {
+      setReminder("Column title cannot be longer than 20 characters.");
       return;
     }
 
@@ -27,6 +31,7 @@ function CreateColumn({ onClose, onSave }) {
     setSelectedColor("var(--border)");
     setReminder("");
   };
+
 
   const handleClose = () => {
     setTitle("");
@@ -78,11 +83,10 @@ function CreateColumn({ onClose, onSave }) {
                 type="button"
                 onClick={() => setSelectedColor(color)}
                 style={{ backgroundColor: color }}
-                className={`w-8 h-8 rounded-lg border-2 transition ${
-                  selectedColor === color
+                className={`w-8 h-8 rounded-lg border-2 transition ${selectedColor === color
                     ? "border-[var(--primary)] scale-110"
                     : "border-transparent"
-                }`}
+                  }`}
               />
             ))}
 
@@ -91,11 +95,10 @@ function CreateColumn({ onClose, onSave }) {
               type="button"
               onClick={() => setSelectedColor("var(--border)")}
               style={{ backgroundColor: "var(--border)" }}
-              className={`w-8 h-8 rounded-lg border-2 transition ${
-                selectedColor === "var(--border)"
+              className={`w-8 h-8 rounded-lg border-2 transition ${selectedColor === "var(--border)"
                   ? "border-[var(--primary)] scale-110"
                   : "border-transparent"
-              }`}
+                }`}
             />
           </div>
         </div>
