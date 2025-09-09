@@ -38,10 +38,10 @@ function TaskCard({
       width: 280,
       pointerEvents: "none",
       boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
+      opacity: 0.95,
       transform: transform
         ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
         : undefined,
-      opacity: 0.95,
     }
     : {
       transform: CSS.Transform.toString(transform),
@@ -52,11 +52,10 @@ function TaskCard({
   return (
     <div
       className="task-card bg-[var(--bg-light)] border border-[var(--border)] rounded-lg shadow-sm p-3  relative"
-
-    >
-      <div className="task-drag absolute top-0 left-0 cursor-grab h-full w-6/7"
         ref={setNodeRef}
         style={style}
+    >
+      <div className="task-drag absolute top-0 left-0 cursor-grab h-full w-6/7"
         {...listeners}
         {...attributes}>
         {/* invisible div to handle dragging */}
