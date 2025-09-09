@@ -46,7 +46,7 @@ function TaskColumn({
           {...dragHandle}
         >
           <span className="font-semibold">{title}</span>
-          <div className="flex-1" />
+          <div className="flex-1"></div>
         </div>
 
         {/* menu stays outside the drag handle so clicks are not swallowed */}
