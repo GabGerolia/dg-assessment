@@ -240,7 +240,7 @@ app.put("/columns/:id/position", (req, res) => {
 app.get("/columns/:columnId/tasks", (req, res) => {
   const { columnId } = req.params;
   db.query(
-    "SELECT * FROM tasks WHERE column_id = ? ORDER BY created_at ASC",
+    "SELECT * FROM tasks WHERE column_id = ? ORDER BY position ASC",
     [columnId],
     (err, results) => {
       if (err) {
@@ -257,24 +257,70 @@ app.post("/columns/:columnId/tasks", (req, res) => {
   const { columnId } = req.params;
   const { title, description } = req.body;
 
+  // find max position in that column
   db.query(
-    "INSERT INTO tasks (column_id, title, description, created_at) VALUES (?, ?, ?, NOW())",
-    [columnId, title, description],
+    "SELECT COALESCE(MAX(position), -1) + 1 AS nextPos FROM tasks WHERE column_id = ?",
+    [columnId],
     (err, result) => {
-      if (err) {
-        console.error("Error creating task:", err);
-        return res.status(500).json({ success: false });
-      }
-      res.json({
-        id: result.insertId,
-        column_id: columnId,
-        title,
-        description,
-        created_at: new Date(),
-      });
+      if (err) return res.status(500).json({ success: false });
+
+      const nextPos = result[0].nextPos;
+
+      db.query(
+        "INSERT INTO tasks (column_id, title, description, created_at, position) VALUES (?, ?, ?, NOW(), ?)",
+        [columnId, title, description, nextPos],
+        (err2, insertResult) => {
+          if (err2) {
+            console.error("Error creating task:", err2);
+            return res.status(500).json({ success: false });
+          }
+
+          res.json({
+            id: insertResult.insertId,
+            column_id: parseInt(columnId, 10),
+            title,
+            description,
+            created_at: new Date(),
+            position: nextPos,
+          });
+        }
+      );
     }
   );
 });
+
+
+// Bulk update task positions in a column / update task positions after drag-and-drop:
+app.put("/columns/:columnId/tasks/reorder", (req, res) => {
+  const { columnId } = req.params;
+  const { orderedTaskIds } = req.body;
+
+  if (!Array.isArray(orderedTaskIds)) {
+    return res.status(400).json({ success: false, message: "Invalid data" });
+  }
+
+  // Build multiple update queries
+  const queries = orderedTaskIds.map((taskId, index) => {
+    return new Promise((resolve, reject) => {
+      db.query(
+        "UPDATE tasks SET position = ? WHERE id = ? AND column_id = ?",
+        [index, taskId, columnId],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+  });
+
+  Promise.all(queries)
+    .then(() => res.json({ success: true }))
+    .catch((err) => {
+      console.error("Error reordering tasks:", err);
+      res.status(500).json({ success: false });
+    });
+});
+
 
 // Update task
 app.put("/tasks/:id", (req, res) => {

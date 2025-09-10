@@ -130,7 +130,12 @@ function TaskManagement() {
         setColumns(prev =>
           prev.map(col =>
             col.id === colId
-              ? { ...col, tasks: [...col.tasks, res.data] } // add new task from backend
+              ? {
+                ...col,
+                tasks: [...col.tasks, res.data].sort(
+                  (a, b) => a.position - b.position
+                ),
+              }
               : col
           )
         );
@@ -228,7 +233,6 @@ function TaskManagement() {
     if (activeType === "task") {
       const sourceColId = findColumnId(active.id);
 
-      // find destination column id
       let destColId = null;
       if (over?.data?.current?.column?.id) {
         destColId = String(over.data.current.column.id);
@@ -245,24 +249,30 @@ function TaskManagement() {
 
       setColumns((prev) => {
         const newCols = prev.map((c) => ({ ...c, tasks: [...c.tasks] }));
-
         const sourceCol = newCols.find((c) => String(c.id) === String(sourceColId));
         const destCol = newCols.find((c) => String(c.id) === String(destColId));
         if (!sourceCol || !destCol) return prev;
 
         const oldIndex = sourceCol.tasks.findIndex((t) => t.id === active.id);
 
-        // === Same column: reorder with arrayMove ===
+        let movedTask = null;
+
         if (sourceColId === destColId) {
+          // Reorder inside same column
           const newIndex = destCol.tasks.findIndex((t) => t.id === over.id);
           if (oldIndex !== -1 && newIndex !== -1) {
-            sourceCol.tasks = arrayMove(sourceCol.tasks, oldIndex, newIndex);
+            destCol.tasks = arrayMove(destCol.tasks, oldIndex, newIndex);
           }
-        } else {
-          // === Different column: remove + insert ===
-          const [movedTask] = sourceCol.tasks.splice(oldIndex, 1);
 
-          // if dropping on a task, insert before it
+          // persist new order
+          const orderedTaskIds = destCol.tasks.map((t) => t.id);
+          axios.put(`http://localhost:8080/columns/${destColId}/tasks/reorder`, {
+            orderedTaskIds,
+          }).catch(err => console.error("Error saving task order:", err));
+        } else {
+          // Move between columns
+          [movedTask] = sourceCol.tasks.splice(oldIndex, 1);
+
           const newIndex =
             over.data.current?.type === "task"
               ? destCol.tasks.findIndex((t) => t.id === over.id)
@@ -274,12 +284,17 @@ function TaskManagement() {
             destCol.tasks.push(movedTask);
           }
 
-          //save to db
           axios.put(`http://localhost:8080/tasks/${movedTask.id}`, {
             title: movedTask.title,
             description: movedTask.description,
             column_id: destColId,
           }).catch(err => console.error("Error updating task column:", err));
+
+          // persist new order in destination column
+          const orderedTaskIds = destCol.tasks.map((t) => t.id);
+          axios.put(`http://localhost:8080/columns/${destColId}/tasks/reorder`, {
+            orderedTaskIds,
+          }).catch(err => console.error("Error saving moved task order:", err));
         }
         return newCols;
       });
