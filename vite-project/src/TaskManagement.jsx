@@ -1,12 +1,12 @@
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
-import {DndContext,closestCorners,DragOverlay,} from "@dnd-kit/core";
-import { SortableContext, horizontalListSortingStrategy, arrayMove  } from "@dnd-kit/sortable";
+import { DndContext, closestCorners, DragOverlay, } from "@dnd-kit/core";
+import { SortableContext, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 
 import Navbar from "./Navbar";
 import TaskCard from "./TaskCard";
-import SortableColumn from "./SortableColumn"; 
+import SortableColumn from "./SortableColumn";
 import CreateColumn from "./CreateColumn";
 import CreateTasks from "./CreateTasks";
 import EditProject from "./EditProject";
@@ -27,10 +27,13 @@ function TaskManagement() {
   }, [projectId]);
 
 
-  //helper to find task index in a column
+  // helper (for later, when tasks exist)
   const findTaskIndex = (colId, taskId) => {
-  return columns[colId].tasks.findIndex((t) => t.id === taskId);
-};
+    const col = columns.find(c => c.id === colId);
+    if (!col || !col.tasks) return -1;
+    return col.tasks.findIndex((t) => t.id === taskId);
+  };
+
   // icons
   const threeDotsIcon = (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -57,88 +60,71 @@ function TaskManagement() {
       title: updatedProject.title,
       description: updatedProject.description,
     })
-    .then((res) => {
-      if (res.data.success) {
-        // update local state immediately
-        setProject((prev) => ({
-          ...prev,
-          title: updatedProject.title,
-          description: updatedProject.description,
-        }));
-        setShowEditingProject(false);
-      }
-    });
+      .then((res) => {
+        if (res.data.success) {
+          // update local state immediately
+          setProject((prev) => ({
+            ...prev,
+            title: updatedProject.title,
+            description: updatedProject.description,
+          }));
+          setShowEditingProject(false);
+        }
+      });
   };
 
+  // columns from DB
+  const [columns, setColumns] = useState([]);
 
-  // columns + tasks state
-  const [columns, setColumns] = useState({
-    todo: {
-      id: "todo",
-      title: "To Do",
-      color: "hsl(140 35% 30%)",
-      tasks: [
-        { id: "t1", title: "Task 1", description: "Example task 1" },
-        { id: "t2", title: "Task 2", description: "Example task 2" },
-      ],
-    },
-    inprogress: {
-      id: "inprogress",
-      title: "In Progress",
-      color: "hsl(45 40% 30%)",
-      tasks: [{ id: "t3", title: "Task 3", description: "Example task 3" }],
-    },
-    done: {
-      id: "done",
-      title: "Done",
-      color: "hsl(270 35% 30%)",
-      tasks: [],
-    },
-  });
+  // Load columns from backend
+  useEffect(() => {
+    if (!projectId) return;
+    axios.get(`http://localhost:8080/projects/${projectId}/columns`)
+      .then(res => {
+        setColumns(res.data); // directly store array of columns
+      })
+      .catch(err => console.error("Error fetching columns:", err));
+  }, [projectId]);
+
   const [showCreateColumn, setShowCreateColumn] = useState(false); //creation of columns
+
   const handleSaveColumn = ({ title, color }) => {
-      // make safe id (lowercase, remove spaces, add timestamp)
-      const newId = `${title.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
-
-      const newColumn = {
-        id: newId,
-        title,
-        color,
-        tasks: [],
-      };
-
-      setColumns((prev) => ({
-        ...prev,
-        [newId]: newColumn,
-      }));
-
-      setShowCreateColumn(false);
-    };
+    axios.post(`http://localhost:8080/projects/${projectId}/columns`, {
+      title,
+      color,
+      position: columns.length, // append at end
+    })
+      .then(res => {
+        setColumns(prev => [...prev, res.data]);
+        setShowCreateColumn(false);
+      })
+      .catch(err => console.error("Error saving column:", err));
+  };
 
   //creation of tasks
-  const [showCreateTasks, setShowCreateTasks] = useState(null); 
+  const [showCreateTasks, setShowCreateTasks] = useState(null);
   const handleSaveTask = (colId, { title, description }) => {
-  const newTask = {
-    id: `task-${Date.now()}`, 
-    title,
-    description,
+    const newTask = {
+      id: `task-${Date.now()}`,
+      title,
+      description,
+    };
+
+    setColumns((prev) => ({
+      ...prev,
+      [colId]: {
+        ...prev[colId],
+        tasks: [...prev[colId].tasks, newTask],
+      },
+    }));
+
+    setShowCreateTasks(null);
   };
-
-  setColumns((prev) => ({
-    ...prev,
-    [colId]: {
-      ...prev[colId],
-      tasks: [...prev[colId].tasks, newTask],
-    },
-  }));
-
-  setShowCreateTasks(null);
-};
 
 
   // currently dragged task
-  const [activeTask, setActiveTask] = useState(null); 
-  const parentRef = useRef(null); 
+  const [activeTask, setActiveTask] = useState(null);
+  const parentRef = useRef(null);
 
   // ===== height recalculation logic (your code kept) =====
   const recalc = () => {
@@ -190,90 +176,93 @@ function TaskManagement() {
     );
   };
 
-const handleDragStart = (event) => {
-  if (event.active.data.current?.type === "task") {
-    setActiveTask(event.active.data.current.task);
-  }
-};
-
-const handleDragEnd = (event) => {
-  const { active, over } = event;
-  if (!over) return;
-
-  const activeType = active.data.current?.type;
-  const overType = over.data.current?.type;
-
-  // column reorder
-  if (activeType === "column" && overType === "column") {
-    const oldIndex = Object.keys(columns).indexOf(active.id);
-    const newIndex = Object.keys(columns).indexOf(over.id);
-
-    if (oldIndex !== newIndex) {
-      const ordered = Object.fromEntries(
-        arrayMove(Object.entries(columns), oldIndex, newIndex)
-      );
-      setColumns(ordered);
+  const handleDragStart = (event) => {
+    if (event.active.data.current?.type === "task") {
+      setActiveTask(event.active.data.current.task);
     }
+  };
 
-    return;
-  }
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over) return;
 
-  // task move
-  if (activeType === "task") {
-    const sourceColId = findColumnId(active.id);
+    const activeType = active.data.current?.type;
+    const overType = over.data.current?.type;
 
-    // dest could be:
-    // 1) a tasks droppable (over.data.current.column.id)
-    // 2) the column sortable wrapper (over.id is a column id)
-    // 3) a task id inside a column (findColumnId(over.id))
-    const destColId =
-      over.data.current?.column?.id ??
-      (Object.keys(columns).includes(over.id) ? over.id : findColumnId(over.id));
+    // column reorder
+    if (activeType === "column" && overType === "column") {
+      const oldIndex = columns.findIndex((c) => c.id.toString() === active.id);
+      const newIndex = columns.findIndex((c) => c.id.toString() === over.id);
 
-    if (!sourceColId || !destColId) {
-      setActiveTask(null);
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        const reordered = arrayMove(columns, oldIndex, newIndex);
+        setColumns(reordered);
+
+        // update DB positions
+        reordered.forEach((col, idx) => {
+          axios.put(`http://localhost:8080/columns/${col.id}/position`, {
+            position: idx,
+          }).catch(err => console.error("Error updating column position:", err));
+        });
+      }
+
       return;
     }
+    // task move
+    if (activeType === "task") {
+      const sourceColId = findColumnId(active.id);
 
-    // determine insertion index. if over is a task, get its index. otherwise append.
-    const toIndex =
-      over.data.current?.type === "task" ? findTaskIndex(destColId, over.id) : -1;
+      // dest could be:
+      // 1) a tasks droppable (over.data.current.column.id)
+      // 2) the column sortable wrapper (over.id is a column id)
+      // 3) a task id inside a column (findColumnId(over.id))
+      const destColId =
+        over.data.current?.column?.id ??
+        (Object.keys(columns).includes(over.id) ? over.id : findColumnId(over.id));
 
-    if (sourceColId === destColId) {
-      const sourceTasks = [...columns[sourceColId].tasks];
-      const fromIndex = findTaskIndex(sourceColId, active.id);
+      if (!sourceColId || !destColId) {
+        setActiveTask(null);
+        return;
+      }
 
-      if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+      // determine insertion index. if over is a task, get its index. otherwise append.
+      const toIndex =
+        over.data.current?.type === "task" ? findTaskIndex(destColId, over.id) : -1;
+
+      if (sourceColId === destColId) {
+        const sourceTasks = [...columns[sourceColId].tasks];
+        const fromIndex = findTaskIndex(sourceColId, active.id);
+
+        if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+          const [movedTask] = sourceTasks.splice(fromIndex, 1);
+          sourceTasks.splice(toIndex, 0, movedTask);
+
+          setColumns({
+            ...columns,
+            [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
+          });
+        }
+      } else {
+        const sourceTasks = [...columns[sourceColId].tasks];
+        const destTasks = [...columns[destColId].tasks];
+
+        const fromIndex = findTaskIndex(sourceColId, active.id);
         const [movedTask] = sourceTasks.splice(fromIndex, 1);
-        sourceTasks.splice(toIndex, 0, movedTask);
+
+        if (toIndex >= 0) destTasks.splice(toIndex, 0, movedTask);
+        else destTasks.push(movedTask);
 
         setColumns({
           ...columns,
           [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
+          [destColId]: { ...columns[destColId], tasks: destTasks },
         });
       }
-    } else {
-      const sourceTasks = [...columns[sourceColId].tasks];
-      const destTasks = [...columns[destColId].tasks];
-
-      const fromIndex = findTaskIndex(sourceColId, active.id);
-      const [movedTask] = sourceTasks.splice(fromIndex, 1);
-
-      if (toIndex >= 0) destTasks.splice(toIndex, 0, movedTask);
-      else destTasks.push(movedTask);
-
-      setColumns({
-        ...columns,
-        [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
-        [destColId]: { ...columns[destColId], tasks: destTasks },
-      });
     }
-  }
 
-  setActiveTask(null);
-  recalc();
-};
-
+    setActiveTask(null);
+    recalc();
+  };
 
   return (
     <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
@@ -288,8 +277,8 @@ const handleDragEnd = (event) => {
         <button
           type="button"
           className="absolute top-4 right-6 text-[var(--text-muted)] hover:text-[var(--primary)] transition"
-          onClick={() => setShowEditingProject(true)}  
-        
+          onClick={() => setShowEditingProject(true)}
+
         >
           {editIcon}
         </button>
@@ -307,83 +296,74 @@ const handleDragEnd = (event) => {
       </div>
 
       {/* Columns */}
-        <DndContext
-          collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
+      <DndContext
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={columns.map(col => col.id.toString())}
+          strategy={horizontalListSortingStrategy}
         >
-          <SortableContext
-            items={Object.keys(columns)} 
-            strategy={horizontalListSortingStrategy}
+          <div
+            ref={parentRef}
+            className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6"
           >
-            <div
-              ref={parentRef}
-              className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6"
-            >
-              {Object.values(columns).map((col) => (
+            {columns.map((col) => (
               <SortableColumn
-                  key={col.id}
-                  id={col.id}
-                  title={col.title}
-                  color={col.color}
-                  tasks={col.tasks}
-                  threeDotsIcon={threeDotsIcon}
-                  onAddTask={(colId) => setShowCreateTasks(colId)}
-                  onEdit={(colId) => console.log("Edit column", colId)}
-                  onDelete={(colId) => console.log("Delete column", colId)}
-                  onMoveLeft={(colId) => console.log("Move left", colId)}
-                  onMoveRight={(colId) => console.log("Move right", colId)}
+                key={col.id}
+                id={col.id.toString()}
+                title={col.title}
+                color={col.color}
+                tasks={[]} // leave empty until tasks backend is wired
+                threeDotsIcon={threeDotsIcon}
+                onAddTask={() => setShowCreateTasks(col.id)}
+                onEdit={() => console.log("Edit column", col.id)}
+                onDelete={() => console.log("Delete column", col.id)}
+                onMoveLeft={() => console.log("Move left", col.id)}
+                onMoveRight={() => console.log("Move right", col.id)}
               >
-
-                {col.tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    id={task.id}
-                    title={task.title}
-                    description={task.description}
-                    threeDotsIcon={threeDotsIcon}
-                  />
-                ))}
+                {/* no tasks yet, so skip rendering TaskCard */}
               </SortableColumn>
             ))}
-            </div>
-          </SortableContext>
+          </div>
+        </SortableContext>
 
-          <DragOverlay>
-            {activeTask ? (
-              <TaskCard
-                id={activeTask.id}
-                title={activeTask.title}
-                description={activeTask.description}
-                threeDotsIcon={threeDotsIcon}
-                isOverlay={true}
-              />
-            ) : null}
-
-          </DragOverlay> {/* Create Column Modal */}
-          {showCreateColumn && (
-            <CreateColumn
-              onClose={() => setShowCreateColumn(false)}
-              onSave={handleSaveColumn}
+        <DragOverlay>
+          {activeTask ? (
+            <TaskCard
+              id={activeTask.id}
+              title={activeTask.title}
+              description={activeTask.description}
+              threeDotsIcon={threeDotsIcon}
+              isOverlay={true}
             />
-          )}
-        </DndContext> {
-        
-        /* Create Task Modal */}
-          {showCreateTasks && (
-          <CreateTasks
-            onClose={() => setShowCreateTasks(null)}
-            onSave={(task) => handleSaveTask(showCreateTasks, task)}
-          />
-        )}
+          ) : null}
 
-        {showEditingProject && ( 
-          <EditProject 
-            project={project}
-            onClose={() => setShowEditingProject(false)}
-            onUpdate={handleUpdateProject}
+        </DragOverlay> {/* Create Column Modal */}
+        {showCreateColumn && (
+          <CreateColumn
+            onClose={() => setShowCreateColumn(false)}
+            onSave={handleSaveColumn}
           />
         )}
+      </DndContext> {
+
+        /* Create Task Modal */}
+      {showCreateTasks && (
+        <CreateTasks
+          onClose={() => setShowCreateTasks(null)}
+          onSave={(task) => handleSaveTask(showCreateTasks, task)}
+        />
+      )}
+
+      {showEditingProject && (
+        <EditProject
+          project={project}
+          onClose={() => setShowEditingProject(false)}
+          onUpdate={handleUpdateProject}
+        />
+      )}
 
     </div>
   );

@@ -5,7 +5,6 @@ import Home from "./Home";
 import Signup from "./Signup";
 import { UserProvider } from "./UserContext";
 import TaskManagement from "./TaskManagement";
-import CreateTasks from "./CreateTasks";
 
 function App() {
   return (
@@ -14,7 +13,6 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/home" element={<Home />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/try" element={<CreateTasks />} /> {/* for testing only */}
         <Route path="/TaskManagement/:projectId" element={<TaskManagement />} />
       </Routes>
     </UserProvider>

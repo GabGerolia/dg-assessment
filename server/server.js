@@ -178,5 +178,54 @@ app.listen(8080, () => {
   console.log("Server started on port 8080");
 });
 
+app.get("/projects/:projectId/columns", (req, res) => {
+  const { projectId } = req.params;
+  db.query(
+    "SELECT * FROM columns WHERE project_id = ? ORDER BY position ASC",
+    [projectId],
+    (err, results) => {
+      if (err) {
+        console.error("Error fetching columns:", err);
+        return res.status(500).json({ success: false });
+      }
+      res.json(results);
+    }
+  );
+});
 
 
+// Create a new column for a project
+app.post("/projects/:projectId/columns", (req, res) => {
+  const { projectId } = req.params;
+  const { title, color, position } = req.body;
+
+  db.query(
+    "INSERT INTO columns (project_id, title, color, position) VALUES (?, ?, ?, ?)",
+    [projectId, title, color || null, position || 0],
+    (err, result) => {
+      if (err) {
+        console.error("Error creating column:", err);
+        return res.status(500).json({ error: "Database error" });
+      }
+      res.json({ id: result.insertId, project_id: projectId, title, color, position });
+    }
+  );
+});
+
+// PUT /columns/:id/position
+app.put("/columns/:id/position", (req, res) => {
+  const { id } = req.params;
+  const { position } = req.body;
+
+  db.query(
+    "UPDATE columns SET position = ? WHERE id = ?",
+    [position, id],
+    (err) => {
+      if (err) {
+        console.error("Error updating column position:", err);
+        return res.status(500).json({ success: false });
+      }
+      res.json({ success: true });
+    }
+  );
+});
