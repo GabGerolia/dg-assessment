@@ -49,8 +49,8 @@ app.post("/api/login", (req, res) => {
 
   if (!username) {
     return res.status(400).json({ error: "Username is required" });
-  } else if(!password){
-    return res.status(400).json({ error: "Password is required"});
+  } else if (!password) {
+    return res.status(400).json({ error: "Password is required" });
   }
 
   db.query(
@@ -63,15 +63,15 @@ app.post("/api/login", (req, res) => {
       }
 
       if (results.length > 0) {
-            res.json({
-            success: true,
-            message: "Login successful",
-            user: {
+        res.json({
+          success: true,
+          message: "Login successful",
+          user: {
             id: results[0].id,
             username: results[0].userName
           }
         });
-      } 
+      }
       else {
         // username not found
         res.json({ success: false, message: "Invalid username" });

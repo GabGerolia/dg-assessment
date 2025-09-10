@@ -52,8 +52,8 @@ function TaskCard({
   return (
     <div
       className="task-card bg-[var(--bg-light)] border border-[var(--border)] rounded-lg shadow-sm p-3  relative"
-        ref={setNodeRef}
-        style={style}
+      ref={setNodeRef}
+      style={style}
     >
       <div className="task-drag absolute top-0 left-0 cursor-grab h-full w-6/7"
         {...listeners}
@@ -100,7 +100,7 @@ function TaskCard({
                 Move to:
               </div>
               {columns &&
-                Object.values(columns).map((col) => (
+                columns.map((col) => (
                   <button
                     key={col.id}
                     className="block w-full px-4 py-2 text-left hover:bg-[var(--bg-light)]"

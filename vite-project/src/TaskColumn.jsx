@@ -17,10 +17,10 @@ function TaskColumn({
   onMoveRight,
 }) {
   const { setNodeRef, isOver } = useDroppable({
-    id,
+    id: `tasks-${id}`, // match the SortableContext id so over.data.current.column will be set
     data: { column: { id, title } },
   });
-
+  
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -90,10 +90,15 @@ function TaskColumn({
       </div>
 
       <div
-        ref={setNodeRef}
-        className={`task-tasks flex-1 min-h-0 p-3 space-y-3 ${isOver ? "bg-[var(--bg-light)]" : ""}`}
+        ref={setNodeRef}   //  marks the column as droppable
+        className={`task-tasks flex-1 min-h-0 p-3 space-y-3 bg-[var(--secondary)] ${isOver ? "bg-[var(--bg-light)]" : ""
+          }`}
       >
-        <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          id={`tasks-${id}`} // make context unique per column
+          items={tasks.map((t) => t.id)}
+          strategy={verticalListSortingStrategy}
+        >
           {children}
         </SortableContext>
       </div>

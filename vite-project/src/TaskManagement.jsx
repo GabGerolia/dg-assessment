@@ -101,6 +101,17 @@ function TaskManagement() {
       .catch(err => console.error("Error saving column:", err));
   };
 
+  //When loading columns from DB, each column doesn’t have tasks yet, so make sure they at least have an empty array - gpt
+  useEffect(() => {
+    if (!projectId) return;
+    axios.get(`http://localhost:8080/projects/${projectId}/columns`)
+      .then(res => {
+        const cols = res.data.map(c => ({ ...c, tasks: [] })); // add empty tasks array
+        setColumns(cols);
+      })
+      .catch(err => console.error("Error fetching columns:", err));
+  }, [projectId]);
+
   //creation of tasks
   const [showCreateTasks, setShowCreateTasks] = useState(null);
   const handleSaveTask = (colId, { title, description }) => {
@@ -110,16 +121,18 @@ function TaskManagement() {
       description,
     };
 
-    setColumns((prev) => ({
-      ...prev,
-      [colId]: {
-        ...prev[colId],
-        tasks: [...prev[colId].tasks, newTask],
-      },
-    }));
+    setColumns((prev) =>
+      prev.map((col) =>
+        col.id === colId
+          ? { ...col, tasks: [...(col.tasks || []), newTask] }
+          : col
+      )
+    );
 
     setShowCreateTasks(null);
+
   };
+
 
 
   // currently dragged task
@@ -171,10 +184,10 @@ function TaskManagement() {
 
   // ===== dnd handlers =====
   const findColumnId = (taskId) => {
-    return Object.keys(columns).find((colId) =>
-      columns[colId].tasks.some((t) => t.id === taskId)
-    );
+    const col = columns.find((c) => (c.tasks || []).some((t) => t.id === taskId));
+    return col ? col.id : null;
   };
+
 
   const handleDragStart = (event) => {
     if (event.active.data.current?.type === "task") {
@@ -186,10 +199,11 @@ function TaskManagement() {
     const { active, over } = event;
     if (!over) return;
 
+    //Identify what’s being dragged and what it’s dropped on
     const activeType = active.data.current?.type;
     const overType = over.data.current?.type;
 
-    // column reorder
+    // column reorder (unchanged)
     if (activeType === "column" && overType === "column") {
       const oldIndex = columns.findIndex((c) => c.id.toString() === active.id);
       const newIndex = columns.findIndex((c) => c.id.toString() === over.id);
@@ -198,66 +212,64 @@ function TaskManagement() {
         const reordered = arrayMove(columns, oldIndex, newIndex);
         setColumns(reordered);
 
-        // update DB positions
         reordered.forEach((col, idx) => {
           axios.put(`http://localhost:8080/columns/${col.id}/position`, {
             position: idx,
           }).catch(err => console.error("Error updating column position:", err));
         });
       }
-
       return;
     }
+
     // task move
     if (activeType === "task") {
+      // source column id computed from current state
       const sourceColId = findColumnId(active.id);
 
-      // dest could be:
-      // 1) a tasks droppable (over.data.current.column.id)
-      // 2) the column sortable wrapper (over.id is a column id)
-      // 3) a task id inside a column (findColumnId(over.id))
-      const destColId =
-        over.data.current?.column?.id ??
-        (Object.keys(columns).includes(over.id) ? over.id : findColumnId(over.id));
+      // figure out destination column id robustly
+      let destColId = null;
+      if (over?.data?.current?.column?.id) {
+        destColId = String(over.data.current.column.id);
+      } else if (typeof over?.id === "string" && over.id.startsWith("tasks-")) {
+        destColId = over.id.replace(/^tasks-/, "");
+      } else {
+        destColId = findColumnId(over.id);
+      }
 
       if (!sourceColId || !destColId) {
         setActiveTask(null);
         return;
       }
 
-      // determine insertion index. if over is a task, get its index. otherwise append.
-      const toIndex =
-        over.data.current?.type === "task" ? findTaskIndex(destColId, over.id) : -1;
+      setColumns((prev) => {
+        // create mutable shallow copy with new task arrays
+        const newCols = prev.map((c) => ({ ...c, tasks: [...(c.tasks || [])] }));
+        const sourceCol = newCols.find((c) => String(c.id) === String(sourceColId));
+        const destCol = newCols.find((c) => String(c.id) === String(destColId));
+        if (!sourceCol || !destCol) return prev;
 
-      if (sourceColId === destColId) {
-        const sourceTasks = [...columns[sourceColId].tasks];
-        const fromIndex = findTaskIndex(sourceColId, active.id);
+        // compute fromIndex and toIndex from the local mutated copy
+        const fromIndex = sourceCol.tasks.findIndex((t) => t.id === active.id);
+        if (fromIndex === -1) return prev;
+        const [movedTask] = sourceCol.tasks.splice(fromIndex, 1);
+        if (!movedTask) return prev;
 
-        if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-          const [movedTask] = sourceTasks.splice(fromIndex, 1);
-          sourceTasks.splice(toIndex, 0, movedTask);
+        const toIndex =
+          over.data.current?.type === "task"
+            ? destCol.tasks.findIndex((t) => t.id === over.id)
+            : -1;
 
-          setColumns({
-            ...columns,
-            [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
-          });
+        if (toIndex >= 0) {
+          destCol.tasks.splice(toIndex, 0, movedTask);
+        } else {
+          destCol.tasks.push(movedTask);
         }
-      } else {
-        const sourceTasks = [...columns[sourceColId].tasks];
-        const destTasks = [...columns[destColId].tasks];
 
-        const fromIndex = findTaskIndex(sourceColId, active.id);
-        const [movedTask] = sourceTasks.splice(fromIndex, 1);
+        // persist change to backend if desired here
+        // example axios.post(`/tasks/${movedTask.id}/move`, { toColumnId: destCol.id }).catch(...)
 
-        if (toIndex >= 0) destTasks.splice(toIndex, 0, movedTask);
-        else destTasks.push(movedTask);
-
-        setColumns({
-          ...columns,
-          [sourceColId]: { ...columns[sourceColId], tasks: sourceTasks },
-          [destColId]: { ...columns[destColId], tasks: destTasks },
-        });
-      }
+        return newCols;
+      });
     }
 
     setActiveTask(null);
@@ -315,7 +327,7 @@ function TaskManagement() {
                 id={col.id.toString()}
                 title={col.title}
                 color={col.color}
-                tasks={[]} // leave empty until tasks backend is wired
+                tasks={col.tasks || []}   // use tasks from state
                 threeDotsIcon={threeDotsIcon}
                 onAddTask={() => setShowCreateTasks(col.id)}
                 onEdit={() => console.log("Edit column", col.id)}
@@ -323,7 +335,21 @@ function TaskManagement() {
                 onMoveLeft={() => console.log("Move left", col.id)}
                 onMoveRight={() => console.log("Move right", col.id)}
               >
-                {/* no tasks yet, so skip rendering TaskCard */}
+                {(col.tasks || []).map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    id={task.id}
+                    title={task.title}
+                    description={task.description}
+                    threeDotsIcon={threeDotsIcon}
+                    columns={columns}
+                    onEdit={(taskId) => console.log("Edit task", taskId)}
+                    onDelete={(taskId) => console.log("Delete task", taskId)}
+                    onMove={(taskId, targetColId) =>
+                      console.log("Move task", taskId, "to column", targetColId)
+                    }
+                  />
+                ))}
               </SortableColumn>
             ))}
           </div>
