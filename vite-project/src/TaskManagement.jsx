@@ -76,12 +76,19 @@ function TaskManagement() {
   // columns from DB
   const [columns, setColumns] = useState([]);
 
-  // Load columns from backend
+  // Load columns and tasks
   useEffect(() => {
     if (!projectId) return;
     axios.get(`http://localhost:8080/projects/${projectId}/columns`)
-      .then(res => {
-        setColumns(res.data); // directly store array of columns
+      .then(async (res) => {
+        // Fetch tasks for each column
+        const colsWithTasks = await Promise.all(
+          res.data.map(async (col) => {
+            const tasksRes = await axios.get(`http://localhost:8080/columns/${col.id}/tasks`);
+            return { ...col, tasks: tasksRes.data };
+          })
+        );
+        setColumns(colsWithTasks);
       })
       .catch(err => console.error("Error fetching columns:", err));
   }, [projectId]);
@@ -115,25 +122,22 @@ function TaskManagement() {
   //creation of tasks
   const [showCreateTasks, setShowCreateTasks] = useState(null);
   const handleSaveTask = (colId, { title, description }) => {
-    const newTask = {
-      id: `task-${Date.now()}`,
+    axios.post(`http://localhost:8080/columns/${colId}/tasks`, {
       title,
       description,
-    };
-
-    setColumns((prev) =>
-      prev.map((col) =>
-        col.id === colId
-          ? { ...col, tasks: [...(col.tasks || []), newTask] }
-          : col
-      )
-    );
-
-    setShowCreateTasks(null);
-
+    })
+      .then(res => {
+        setColumns(prev =>
+          prev.map(col =>
+            col.id === colId
+              ? { ...col, tasks: [...col.tasks, res.data] } // add new task from backend
+              : col
+          )
+        );
+        setShowCreateTasks(null);
+      })
+      .catch(err => console.error("Error saving task:", err));
   };
-
-
 
   // currently dragged task
   const [activeTask, setActiveTask] = useState(null);
@@ -269,8 +273,14 @@ function TaskManagement() {
           } else {
             destCol.tasks.push(movedTask);
           }
-        }
 
+          //save to db
+          axios.put(`http://localhost:8080/tasks/${movedTask.id}`, {
+            title: movedTask.title,
+            description: movedTask.description,
+            column_id: destColId,
+          }).catch(err => console.error("Error updating task column:", err));
+        }
         return newCols;
       });
     }
@@ -279,124 +289,137 @@ function TaskManagement() {
     recalc();
   };
 
+  // delete task
+  const handleDeleteTask = (colId, taskId) => {
+    axios.delete(`http://localhost:8080/tasks/${taskId}`)
+      .then(() => {
+        setColumns(prev =>
+          prev.map(col =>
+            col.id === colId
+              ? { ...col, tasks: col.tasks.filter(t => t.id !== taskId) }
+              : col
+          )
+        );
+      })
+      .catch(err => console.error("Error deleting task:", err));
+  };
 
-return (
-  <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
-    <Navbar />
 
-    {/* Title */}
-    <div className="task-title relative w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
-      <h1 className="text-2xl font-bold mb-1">{project?.title || "Unfetched Title"}</h1>
-      <p className="text-[var(--text-muted)] max-h-[4.5rem] overflow-y-auto leading-snug">
-        {project?.description || "No description provided."}
-      </p>
-      <button
-        type="button"
-        className="absolute top-4 right-6 text-[var(--text-muted)] hover:text-[var(--primary)] transition"
-        onClick={() => setShowEditingProject(true)}
+  return (
+    <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
+      <Navbar />
 
-      >
-        {editIcon}
-      </button>
-    </div>
+      {/* Title */}
+      <div className="task-title relative w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
+        <h1 className="text-2xl font-bold mb-1">{project?.title || "Unfetched Title"}</h1>
+        <p className="text-[var(--text-muted)] max-h-[4.5rem] overflow-y-auto leading-snug">
+          {project?.description || "No description provided."}
+        </p>
+        <button
+          type="button"
+          className="absolute top-4 right-6 text-[var(--text-muted)] hover:text-[var(--primary)] transition"
+          onClick={() => setShowEditingProject(true)}
 
-    {/* Tools */}
-    <div className="task-tools flex items-center space-x-3 px-6 py-3 bg-[var(--bg)] border-b border-[var(--border)]">
-      <button type="button" className="px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition"
-        onClick={() => setShowCreateColumn(true)}>
-        Create Column
-      </button>
-      <button type="button" className="px-4 py-2 rounded-lg bg-[var(--secondary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition">
-        View logs
-      </button>
-    </div>
-
-    {/* Columns */}
-    <DndContext
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext
-        items={columns.map(col => col.id.toString())}
-        strategy={horizontalListSortingStrategy}
-      >
-        <div
-          ref={parentRef}
-          className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6"
         >
-          {columns.map((col) => (
-            <SortableColumn
-              key={col.id}
-              id={col.id.toString()}
-              title={col.title}
-              color={col.color}
-              tasks={col.tasks || []}   // use tasks from state
+          {editIcon}
+        </button>
+      </div>
+
+      {/* Tools */}
+      <div className="task-tools flex items-center space-x-3 px-6 py-3 bg-[var(--bg)] border-b border-[var(--border)]">
+        <button type="button" className="px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition"
+          onClick={() => setShowCreateColumn(true)}>
+          Create Column
+        </button>
+        <button type="button" className="px-4 py-2 rounded-lg bg-[var(--secondary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition">
+          View logs
+        </button>
+      </div>
+
+      {/* Columns */}
+      <DndContext
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={columns.map(col => col.id.toString())}
+          strategy={horizontalListSortingStrategy}
+        >
+          <div
+            ref={parentRef}
+            className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6"
+          >
+            {columns.map((col) => (
+              <SortableColumn
+                key={col.id}
+                id={col.id.toString()}
+                title={col.title}
+                color={col.color}
+                tasks={col.tasks || []}   // use tasks from state
+                threeDotsIcon={threeDotsIcon}
+                onAddTask={() => setShowCreateTasks(col.id)}
+                onEdit={() => console.log("Edit column", col.id)}
+                onDelete={() => console.log("Delete column", col.id)}
+                onMoveLeft={() => console.log("Move left", col.id)}
+                onMoveRight={() => console.log("Move right", col.id)}
+              >
+                {(col.tasks || []).map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    id={task.id}
+                    title={task.title}
+                    description={task.description}
+                    threeDotsIcon={threeDotsIcon}
+                    columns={columns}
+                    onEdit={(taskId) => console.log("Edit task", taskId)}
+                    onDelete={(taskId) => handleDeleteTask(col.id, taskId)}
+                    onMove={(taskId, targetColId) => console.log("Move task", taskId, "to column", targetColId)}
+                  />
+                ))}
+              </SortableColumn>
+            ))}
+          </div>
+        </SortableContext>
+
+        <DragOverlay>
+          {activeTask ? (
+            <TaskCard
+              id={activeTask.id}
+              title={activeTask.title}
+              description={activeTask.description}
               threeDotsIcon={threeDotsIcon}
-              onAddTask={() => setShowCreateTasks(col.id)}
-              onEdit={() => console.log("Edit column", col.id)}
-              onDelete={() => console.log("Delete column", col.id)}
-              onMoveLeft={() => console.log("Move left", col.id)}
-              onMoveRight={() => console.log("Move right", col.id)}
-            >
-              {(col.tasks || []).map((task) => (
-                <TaskCard
-                  key={task.id}
-                  id={task.id}
-                  title={task.title}
-                  description={task.description}
-                  threeDotsIcon={threeDotsIcon}
-                  columns={columns}
-                  onEdit={(taskId) => console.log("Edit task", taskId)}
-                  onDelete={(taskId) => console.log("Delete task", taskId)}
-                  onMove={(taskId, targetColId) =>
-                    console.log("Move task", taskId, "to column", targetColId)
-                  }
-                />
-              ))}
-            </SortableColumn>
-          ))}
-        </div>
-      </SortableContext>
+              isOverlay={true}
+            />
+          ) : null}
 
-      <DragOverlay>
-        {activeTask ? (
-          <TaskCard
-            id={activeTask.id}
-            title={activeTask.title}
-            description={activeTask.description}
-            threeDotsIcon={threeDotsIcon}
-            isOverlay={true}
+        </DragOverlay> {/* Create Column Modal */}
+        {showCreateColumn && (
+          <CreateColumn
+            onClose={() => setShowCreateColumn(false)}
+            onSave={handleSaveColumn}
           />
-        ) : null}
-
-      </DragOverlay> {/* Create Column Modal */}
-      {showCreateColumn && (
-        <CreateColumn
-          onClose={() => setShowCreateColumn(false)}
-          onSave={handleSaveColumn}
-        />
-      )}
-    </DndContext> {
+        )}
+      </DndContext> {
 
         /* Create Task Modal */}
-    {showCreateTasks && (
-      <CreateTasks
-        onClose={() => setShowCreateTasks(null)}
-        onSave={(task) => handleSaveTask(showCreateTasks, task)}
-      />
-    )}
+      {showCreateTasks && (
+        <CreateTasks
+          onClose={() => setShowCreateTasks(null)}
+          onSave={(task) => handleSaveTask(showCreateTasks, task)}
+        />
+      )}
 
-    {showEditingProject && (
-      <EditProject
-        project={project}
-        onClose={() => setShowEditingProject(false)}
-        onUpdate={handleUpdateProject}
-      />
-    )}
+      {showEditingProject && (
+        <EditProject
+          project={project}
+          onClose={() => setShowEditingProject(false)}
+          onUpdate={handleUpdateProject}
+        />
+      )}
 
-  </div>
-);
+    </div>
+  );
 }
 
 export default TaskManagement;
