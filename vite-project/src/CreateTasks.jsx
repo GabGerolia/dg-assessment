@@ -17,7 +17,7 @@ function CreateTasks({ onClose, onSave }) {
 
 
         if (title.length > 20) {
-            setReminder("Column title cannot be longer than 20 characters.");
+            setReminder("Task label cannot be longer than 20 characters.");
             return;
         }
 
