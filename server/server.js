@@ -174,6 +174,7 @@ app.delete("/api/projects/:id", (req, res) => {
 });
 
 
+//localhost:8080
 app.listen(8080, () => {
   console.log("Server started on port 8080");
 });
@@ -193,6 +194,8 @@ app.get("/projects/:projectId/columns", (req, res) => {
   );
 });
 
+
+//=== COLUMNS ===
 
 // Create a new column for a project
 app.post("/projects/:projectId/columns", (req, res) => {
@@ -228,4 +231,76 @@ app.put("/columns/:id/position", (req, res) => {
       res.json({ success: true });
     }
   );
+});
+
+
+// === TASKS ===
+
+// Get tasks for a column
+app.get("/columns/:columnId/tasks", (req, res) => {
+  const { columnId } = req.params;
+  db.query(
+    "SELECT * FROM tasks WHERE column_id = ? ORDER BY created_at ASC",
+    [columnId],
+    (err, results) => {
+      if (err) {
+        console.error("Error fetching tasks:", err);
+        return res.status(500).json({ success: false });
+      }
+      res.json(results);
+    }
+  );
+});
+
+// Create a new task
+app.post("/columns/:columnId/tasks", (req, res) => {
+  const { columnId } = req.params;
+  const { title, description } = req.body;
+
+  db.query(
+    "INSERT INTO tasks (column_id, title, description, created_at) VALUES (?, ?, ?, NOW())",
+    [columnId, title, description],
+    (err, result) => {
+      if (err) {
+        console.error("Error creating task:", err);
+        return res.status(500).json({ success: false });
+      }
+      res.json({
+        id: result.insertId,
+        column_id: columnId,
+        title,
+        description,
+        created_at: new Date(),
+      });
+    }
+  );
+});
+
+// Update task
+app.put("/tasks/:id", (req, res) => {
+  const { id } = req.params;
+  const { title, description, column_id } = req.body; // column_id optional (for moving)
+  db.query(
+    "UPDATE tasks SET title = ?, description = ?, column_id = ? WHERE id = ?",
+    [title, description, column_id, id],
+    (err) => {
+      if (err) {
+        console.error("Error updating task:", err);
+        return res.status(500).json({ success: false });
+      }
+      res.json({ success: true });
+    }
+  );
+});
+
+// Delete task
+app.delete("/tasks/:id", (req, res) => {
+  const { id } = req.params;
+  db.query("DELETE FROM tasks WHERE id = ?", [id], (err) => {
+    if (err) {
+      console.error("Error deleting task:", err);
+      return res.status(500).json({ success: false });
+    }
+    res.json({ success: true });
+  });
 });
