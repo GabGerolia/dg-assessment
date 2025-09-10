@@ -91,7 +91,7 @@ function TaskColumn({
 
       <div
         ref={setNodeRef}   //  marks the column as droppable
-        className={`task-tasks flex-1 min-h-0 p-3 space-y-3 bg-[var(--secondary)] ${isOver ? "bg-[var(--bg-light)]" : ""
+        className={`task-tasks flex-1 min-h-0 p-3 space-y-3 ${isOver ? "bg-[var(--bg-light)]" : ""
           }`}
       >
         <SortableContext
