@@ -199,11 +199,10 @@ function TaskManagement() {
     const { active, over } = event;
     if (!over) return;
 
-    //Identify what’s being dragged and what it’s dropped on
     const activeType = active.data.current?.type;
     const overType = over.data.current?.type;
 
-    // column reorder (unchanged)
+    // === Column reordering (unchanged) ===
     if (activeType === "column" && overType === "column") {
       const oldIndex = columns.findIndex((c) => c.id.toString() === active.id);
       const newIndex = columns.findIndex((c) => c.id.toString() === over.id);
@@ -221,12 +220,11 @@ function TaskManagement() {
       return;
     }
 
-    // task move
+    // === Task reordering / moving ===
     if (activeType === "task") {
-      // source column id computed from current state
       const sourceColId = findColumnId(active.id);
 
-      // figure out destination column id robustly
+      // find destination column id
       let destColId = null;
       if (over?.data?.current?.column?.id) {
         destColId = String(over.data.current.column.id);
@@ -242,31 +240,36 @@ function TaskManagement() {
       }
 
       setColumns((prev) => {
-        // create mutable shallow copy with new task arrays
-        const newCols = prev.map((c) => ({ ...c, tasks: [...(c.tasks || [])] }));
+        const newCols = prev.map((c) => ({ ...c, tasks: [...c.tasks] }));
+
         const sourceCol = newCols.find((c) => String(c.id) === String(sourceColId));
         const destCol = newCols.find((c) => String(c.id) === String(destColId));
         if (!sourceCol || !destCol) return prev;
 
-        // compute fromIndex and toIndex from the local mutated copy
-        const fromIndex = sourceCol.tasks.findIndex((t) => t.id === active.id);
-        if (fromIndex === -1) return prev;
-        const [movedTask] = sourceCol.tasks.splice(fromIndex, 1);
-        if (!movedTask) return prev;
+        const oldIndex = sourceCol.tasks.findIndex((t) => t.id === active.id);
 
-        const toIndex =
-          over.data.current?.type === "task"
-            ? destCol.tasks.findIndex((t) => t.id === over.id)
-            : -1;
-
-        if (toIndex >= 0) {
-          destCol.tasks.splice(toIndex, 0, movedTask);
+        // === Same column: reorder with arrayMove ===
+        if (sourceColId === destColId) {
+          const newIndex = destCol.tasks.findIndex((t) => t.id === over.id);
+          if (oldIndex !== -1 && newIndex !== -1) {
+            sourceCol.tasks = arrayMove(sourceCol.tasks, oldIndex, newIndex);
+          }
         } else {
-          destCol.tasks.push(movedTask);
-        }
+          // === Different column: remove + insert ===
+          const [movedTask] = sourceCol.tasks.splice(oldIndex, 1);
 
-        // persist change to backend if desired here
-        // example axios.post(`/tasks/${movedTask.id}/move`, { toColumnId: destCol.id }).catch(...)
+          // if dropping on a task, insert before it
+          const newIndex =
+            over.data.current?.type === "task"
+              ? destCol.tasks.findIndex((t) => t.id === over.id)
+              : destCol.tasks.length;
+
+          if (newIndex >= 0) {
+            destCol.tasks.splice(newIndex, 0, movedTask);
+          } else {
+            destCol.tasks.push(movedTask);
+          }
+        }
 
         return newCols;
       });
@@ -276,123 +279,124 @@ function TaskManagement() {
     recalc();
   };
 
-  return (
-    <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
-      <Navbar />
 
-      {/* Title */}
-      <div className="task-title relative w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
-        <h1 className="text-2xl font-bold mb-1">{project?.title || "Unfetched Title"}</h1>
-        <p className="text-[var(--text-muted)] max-h-[4.5rem] overflow-y-auto leading-snug">
-          {project?.description || "No description provided."}
-        </p>
-        <button
-          type="button"
-          className="absolute top-4 right-6 text-[var(--text-muted)] hover:text-[var(--primary)] transition"
-          onClick={() => setShowEditingProject(true)}
+return (
+  <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
+    <Navbar />
 
-        >
-          {editIcon}
-        </button>
-      </div>
+    {/* Title */}
+    <div className="task-title relative w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
+      <h1 className="text-2xl font-bold mb-1">{project?.title || "Unfetched Title"}</h1>
+      <p className="text-[var(--text-muted)] max-h-[4.5rem] overflow-y-auto leading-snug">
+        {project?.description || "No description provided."}
+      </p>
+      <button
+        type="button"
+        className="absolute top-4 right-6 text-[var(--text-muted)] hover:text-[var(--primary)] transition"
+        onClick={() => setShowEditingProject(true)}
 
-      {/* Tools */}
-      <div className="task-tools flex items-center space-x-3 px-6 py-3 bg-[var(--bg)] border-b border-[var(--border)]">
-        <button type="button" className="px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition"
-          onClick={() => setShowCreateColumn(true)}>
-          Create Column
-        </button>
-        <button type="button" className="px-4 py-2 rounded-lg bg-[var(--secondary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition">
-          View logs
-        </button>
-      </div>
-
-      {/* Columns */}
-      <DndContext
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
       >
-        <SortableContext
-          items={columns.map(col => col.id.toString())}
-          strategy={horizontalListSortingStrategy}
+        {editIcon}
+      </button>
+    </div>
+
+    {/* Tools */}
+    <div className="task-tools flex items-center space-x-3 px-6 py-3 bg-[var(--bg)] border-b border-[var(--border)]">
+      <button type="button" className="px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition"
+        onClick={() => setShowCreateColumn(true)}>
+        Create Column
+      </button>
+      <button type="button" className="px-4 py-2 rounded-lg bg-[var(--secondary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition">
+        View logs
+      </button>
+    </div>
+
+    {/* Columns */}
+    <DndContext
+      collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={columns.map(col => col.id.toString())}
+        strategy={horizontalListSortingStrategy}
+      >
+        <div
+          ref={parentRef}
+          className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6"
         >
-          <div
-            ref={parentRef}
-            className="task-parent-columns flex-1 min-h-0 overflow-y-hidden overflow-x-auto flex space-x-3 px-6 py-6"
-          >
-            {columns.map((col) => (
-              <SortableColumn
-                key={col.id}
-                id={col.id.toString()}
-                title={col.title}
-                color={col.color}
-                tasks={col.tasks || []}   // use tasks from state
-                threeDotsIcon={threeDotsIcon}
-                onAddTask={() => setShowCreateTasks(col.id)}
-                onEdit={() => console.log("Edit column", col.id)}
-                onDelete={() => console.log("Delete column", col.id)}
-                onMoveLeft={() => console.log("Move left", col.id)}
-                onMoveRight={() => console.log("Move right", col.id)}
-              >
-                {(col.tasks || []).map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    id={task.id}
-                    title={task.title}
-                    description={task.description}
-                    threeDotsIcon={threeDotsIcon}
-                    columns={columns}
-                    onEdit={(taskId) => console.log("Edit task", taskId)}
-                    onDelete={(taskId) => console.log("Delete task", taskId)}
-                    onMove={(taskId, targetColId) =>
-                      console.log("Move task", taskId, "to column", targetColId)
-                    }
-                  />
-                ))}
-              </SortableColumn>
-            ))}
-          </div>
-        </SortableContext>
-
-        <DragOverlay>
-          {activeTask ? (
-            <TaskCard
-              id={activeTask.id}
-              title={activeTask.title}
-              description={activeTask.description}
+          {columns.map((col) => (
+            <SortableColumn
+              key={col.id}
+              id={col.id.toString()}
+              title={col.title}
+              color={col.color}
+              tasks={col.tasks || []}   // use tasks from state
               threeDotsIcon={threeDotsIcon}
-              isOverlay={true}
-            />
-          ) : null}
+              onAddTask={() => setShowCreateTasks(col.id)}
+              onEdit={() => console.log("Edit column", col.id)}
+              onDelete={() => console.log("Delete column", col.id)}
+              onMoveLeft={() => console.log("Move left", col.id)}
+              onMoveRight={() => console.log("Move right", col.id)}
+            >
+              {(col.tasks || []).map((task) => (
+                <TaskCard
+                  key={task.id}
+                  id={task.id}
+                  title={task.title}
+                  description={task.description}
+                  threeDotsIcon={threeDotsIcon}
+                  columns={columns}
+                  onEdit={(taskId) => console.log("Edit task", taskId)}
+                  onDelete={(taskId) => console.log("Delete task", taskId)}
+                  onMove={(taskId, targetColId) =>
+                    console.log("Move task", taskId, "to column", targetColId)
+                  }
+                />
+              ))}
+            </SortableColumn>
+          ))}
+        </div>
+      </SortableContext>
 
-        </DragOverlay> {/* Create Column Modal */}
-        {showCreateColumn && (
-          <CreateColumn
-            onClose={() => setShowCreateColumn(false)}
-            onSave={handleSaveColumn}
+      <DragOverlay>
+        {activeTask ? (
+          <TaskCard
+            id={activeTask.id}
+            title={activeTask.title}
+            description={activeTask.description}
+            threeDotsIcon={threeDotsIcon}
+            isOverlay={true}
           />
-        )}
-      </DndContext> {
+        ) : null}
+
+      </DragOverlay> {/* Create Column Modal */}
+      {showCreateColumn && (
+        <CreateColumn
+          onClose={() => setShowCreateColumn(false)}
+          onSave={handleSaveColumn}
+        />
+      )}
+    </DndContext> {
 
         /* Create Task Modal */}
-      {showCreateTasks && (
-        <CreateTasks
-          onClose={() => setShowCreateTasks(null)}
-          onSave={(task) => handleSaveTask(showCreateTasks, task)}
-        />
-      )}
+    {showCreateTasks && (
+      <CreateTasks
+        onClose={() => setShowCreateTasks(null)}
+        onSave={(task) => handleSaveTask(showCreateTasks, task)}
+      />
+    )}
 
-      {showEditingProject && (
-        <EditProject
-          project={project}
-          onClose={() => setShowEditingProject(false)}
-          onUpdate={handleUpdateProject}
-        />
-      )}
+    {showEditingProject && (
+      <EditProject
+        project={project}
+        onClose={() => setShowEditingProject(false)}
+        onUpdate={handleUpdateProject}
+      />
+    )}
 
-    </div>
-  );
+  </div>
+);
 }
 
 export default TaskManagement;
