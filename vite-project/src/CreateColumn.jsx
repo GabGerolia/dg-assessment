@@ -1,21 +1,11 @@
 import { useState, useEffect } from "react";
+import { presetColors } from "./constVars.js";
 
 function CreateColumn({ onClose, onSave, column }) {
   const [title, setTitle] = useState("");
   const [reminder, setReminder] = useState("");
   const [selectedColor, setSelectedColor] = useState("var(--border)");
 
-  const presetColors = [
-    "hsl(340 40% 30%)", // Muted rose/pink
-    "hsl(190 45% 30%)", // Muted teal
-    "hsl(140 35% 30%)", // Muted green
-    "hsl(45 40% 30%)",  // Muted yellow
-    "hsl(25 45% 30%)",  // Muted orange
-    "hsl(210 50% 30%)", // Muted blue
-    "hsl(270 35% 30%)", // Muted violet
-  ];
-
-  // Pre-fill when editing
   useEffect(() => {
     if (column) {
       setTitle(column.title);

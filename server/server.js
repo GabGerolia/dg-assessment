@@ -123,15 +123,48 @@ app.post("/api/projects", (req, res) => {
     return res.status(400).json({ success: false, message: "Missing fields" });
   }
 
-  const sql = "INSERT INTO projects (user_id, title, description) VALUES (?, ?, ?)";
+  const sql = "INSERT INTO projects (user_id, title, description, created_at) VALUES (?, ?, ?, NOW())";
   db.query(sql, [userId, title, description], (err, result) => {
     if (err) {
       console.error("Error inserting project:", err);
       return res.status(500).json({ success: false, error: "Database error" });
     }
-    res.json({ success: true, id: result.insertId });
+
+    const projectId = result.insertId;
+
+    // Insert preset columns 
+    //change colors here if main colors was change
+    const presetColumns = [
+      { title: "Todo", color: "hsl(350, 63%, 40%)", position: 0 },
+      { title: "In Progress", color: "hsl(25 45% 40%)", position: 1 },
+      { title: "Done", color: "hsl(140 35% 40%)", position: 2 },
+    ];
+
+    const columnSql = "INSERT INTO columns (project_id, title, color, position) VALUES ?";
+    const columnValues = presetColumns.map(c => [projectId, c.title, c.color, c.position]);
+
+    db.query(columnSql, [columnValues], (colErr, colResult) => {
+      if (colErr) {
+        console.error("Error inserting columns:", colErr);
+        return res.status(500).json({ success: false, error: "Database error" });
+      }
+
+      const todoColumnId = colResult.insertId; // ID of "Todo" column (first inserted)
+
+      // Insert default sample task into Todo
+      const taskSql = "INSERT INTO tasks (column_id, title, description, created_at, position) VALUES (?, ?, ?, NOW(), 0)";
+      db.query(taskSql, [todoColumnId, "Sample Title", "Sample Description"], (taskErr) => {
+        if (taskErr) {
+          console.error("Error inserting sample task:", taskErr);
+          return res.status(500).json({ success: false, error: "Database error" });
+        }
+
+        res.json({ success: true, id: projectId });
+      });
+    });
   });
 });
+
 
 // Get projects by user
 app.get("/api/projects/:userId", (req, res) => {
