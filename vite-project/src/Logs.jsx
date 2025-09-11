@@ -44,13 +44,13 @@ function Logs() {
                 <div className="flex-1 overflow-y-auto p-4 space-y-2">
                     {/* Example log entry */}
                     <div className="p-3 rounded-lg bg-[var(--bg-light)] border border-[var(--border-muted)]">
-                        <p className="text-sm">
-                            User <span className="font-semibold">John</span> updated a task.
+                        <p className="text-sm truncate max-w-[700px]">
+                            User <span className="font-semibold">John</span> updated a task with aated a task with a very long descrated a task with a very long descrated a task with a very long descrated a task with a very long descrated a task with a very long descrated a task with a very long descrated a task with a very long descr very long description that should scroll instead of wrapping.
                         </p>
                         <p className="text-xs text-[var(--text-muted)]">2025-09-11 22:30</p>
                     </div>
                     <div className="p-3 rounded-lg bg-[var(--bg-light)] border border-[var(--border-muted)]">
-                        <p className="text-sm">
+                        <p className="text-sm truncate max-w-[700px]">
                             Column <span className="font-semibold">To Do</span> was created.
                         </p>
                         <p className="text-xs text-[var(--text-muted)]">2025-09-11 22:20</p>
