@@ -95,18 +95,33 @@ function TaskManagement() {
   }, [projectId]);
 
   const [showCreateColumn, setShowCreateColumn] = useState(false); //creation of columns
+  const [editingColumn, setEditingColumn] = useState(null); //editing of columns
 
-  const handleSaveColumn = ({ title, color }) => {
-    axios.post(`http://localhost:8080/projects/${projectId}/columns`, {
-      title,
-      color,
-      position: columns.length, // append at end
-    })
-      .then(res => {
-        setColumns(prev => [...prev, res.data]);
-        setShowCreateColumn(false);
+  const handleSaveColumn = ({ id, title, color }) => {
+    if (id) {
+      // update
+      axios.put(`http://localhost:8080/columns/${id}`, { title, color })
+        .then(() => {
+          setColumns(prev =>
+            prev.map(c => c.id === id ? { ...c, title, color } : c)
+          );
+          setEditingColumn(null);
+          setShowCreateColumn(false);
+        })
+        .catch(err => console.error("Error updating column:", err));
+    } else {
+      // create
+      axios.post(`http://localhost:8080/projects/${projectId}/columns`, {
+        title,
+        color,
+        position: columns.length,
       })
-      .catch(err => console.error("Error saving column:", err));
+        .then(res => {
+          setColumns(prev => [...prev, res.data]);
+          setShowCreateColumn(false);
+        })
+        .catch(err => console.error("Error saving column:", err));
+    }
   };
 
   //When loading columns from DB, each column doesn’t have tasks yet, so make sure they at least have an empty array - gpt
@@ -378,6 +393,7 @@ function TaskManagement() {
   };
 
 
+
   return (
     <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
       <Navbar />
@@ -429,10 +445,13 @@ function TaskManagement() {
                 id={col.id.toString()}
                 title={col.title}
                 color={col.color}
-                tasks={col.tasks || []}   // use tasks from state
+                tasks={col.tasks || []}
                 threeDotsIcon={threeDotsIcon}
                 onAddTask={() => setShowCreateTasks(col.id)}
-                onEdit={() => console.log("Edit column", col.id)}
+                onEdit={() => {
+                  setEditingColumn(col);
+                  setShowCreateColumn(true);
+                }}
                 onDelete={() => requestDeleteColumn(col.id)}
                 onMoveLeft={() => console.log("Move left", col.id)}
                 onMoveRight={() => console.log("Move right", col.id)}
@@ -469,10 +488,15 @@ function TaskManagement() {
         </DragOverlay> {/* Create Column Modal */}
         {showCreateColumn && (
           <CreateColumn
-            onClose={() => setShowCreateColumn(false)}
+            column={editingColumn}   // pass column if editing
+            onClose={() => {
+              setShowCreateColumn(false);
+              setEditingColumn(null);
+            }}
             onSave={handleSaveColumn}
           />
         )}
+
       </DndContext> {
 
         /* Create Task Modal */}
@@ -501,7 +525,6 @@ function TaskManagement() {
         }}
         onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
       />
-
     </div>
   );
 }

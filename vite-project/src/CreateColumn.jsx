@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-function CreateColumn({ onClose, onSave }) {
+function CreateColumn({ onClose, onSave, column }) {
   const [title, setTitle] = useState("");
   const [reminder, setReminder] = useState("");
-  const [selectedColor, setSelectedColor] = useState("var(--border)"); // default is theme border
+  const [selectedColor, setSelectedColor] = useState("var(--border)");
 
   const presetColors = [
     "hsl(340 40% 30%)", // Muted rose/pink
@@ -15,6 +15,13 @@ function CreateColumn({ onClose, onSave }) {
     "hsl(270 35% 30%)", // Muted violet
   ];
 
+  // Pre-fill when editing
+  useEffect(() => {
+    if (column) {
+      setTitle(column.title);
+      setSelectedColor(column.color || "var(--border)");
+    }
+  }, [column]);
 
   const handleSave = () => {
     if (!title.trim()) {
@@ -26,12 +33,16 @@ function CreateColumn({ onClose, onSave }) {
       return;
     }
 
-    onSave({ title, color: selectedColor || "var(--border)" });
+    onSave({
+      id: column?.id,  // include id if editing
+      title,
+      color: selectedColor || "var(--border)",
+    });
+
     setTitle("");
     setSelectedColor("var(--border)");
     setReminder("");
   };
-
 
   const handleClose = () => {
     setTitle("");
@@ -39,6 +50,8 @@ function CreateColumn({ onClose, onSave }) {
     setReminder("");
     onClose();
   };
+
+  const isEditing = Boolean(column);
 
   return (
     <div
@@ -56,7 +69,9 @@ function CreateColumn({ onClose, onSave }) {
           ✕
         </button>
 
-        <h1 className="text-2xl font-bold text-center mb-4">Create Column</h1>
+        <h1 className="text-2xl font-bold text-center mb-4">
+          {isEditing ? "Edit Column" : "Create Column"}
+        </h1>
 
         {reminder && (
           <div className="text-[var(--danger)] text-sm text-center mb-4">
@@ -83,10 +98,11 @@ function CreateColumn({ onClose, onSave }) {
                 type="button"
                 onClick={() => setSelectedColor(color)}
                 style={{ backgroundColor: color }}
-                className={`w-8 h-8 rounded-lg border-2 transition ${selectedColor === color
+                className={`w-8 h-8 rounded-lg border-2 transition ${
+                  selectedColor === color
                     ? "border-[var(--primary)] scale-110"
                     : "border-transparent"
-                  }`}
+                }`}
               />
             ))}
 
@@ -95,10 +111,11 @@ function CreateColumn({ onClose, onSave }) {
               type="button"
               onClick={() => setSelectedColor("var(--border)")}
               style={{ backgroundColor: "var(--border)" }}
-              className={`w-8 h-8 rounded-lg border-2 transition ${selectedColor === "var(--border)"
+              className={`w-8 h-8 rounded-lg border-2 transition ${
+                selectedColor === "var(--border)"
                   ? "border-[var(--primary)] scale-110"
                   : "border-transparent"
-                }`}
+              }`}
             />
           </div>
         </div>
@@ -115,7 +132,7 @@ function CreateColumn({ onClose, onSave }) {
             onClick={handleSave}
             className="flex-1 bg-[var(--primary)] text-[var(--bg-dark)] font-medium py-2 rounded-lg hover:opacity-90 transition"
           >
-            Save
+            {isEditing ? "Update" : "Save"}
           </button>
         </div>
       </div>

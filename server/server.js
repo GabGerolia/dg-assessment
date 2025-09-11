@@ -233,6 +233,25 @@ app.put("/columns/:id/position", (req, res) => {
   );
 });
 
+// Update column
+app.put("/columns/:id", (req, res) => {
+  const { id } = req.params;
+  const { title, color } = req.body;
+
+  db.query(
+    "UPDATE columns SET title = ?, color = ? WHERE id = ?",
+    [title, color, id],
+    (err) => {
+      if (err) {
+        console.error("Error updating column:", err);
+        return res.status(500).json({ success: false });
+      }
+      res.json({ success: true });
+    }
+  );
+});
+
+
 // Delete column and its tasks
 app.delete("/columns/:id", (req, res) => {
   const { id } = req.params;
