@@ -135,6 +135,9 @@ function TaskManagement() {
       .catch(err => console.error("Error fetching columns:", err));
   }, [projectId]);
 
+  const [editingTask, setEditingTask] = useState(null); // task object when editing
+  const [editingTaskColId, setEditingTaskColId] = useState(null); // column id of task being edited
+
   //creation of tasks
   const [showCreateTasks, setShowCreateTasks] = useState(null);
   const handleSaveTask = (colId, { title, description }) => {
@@ -158,6 +161,32 @@ function TaskManagement() {
         setShowCreateTasks(null);
       })
       .catch(err => console.error("Error saving task:", err));
+  };
+
+  // updating task at edit
+  const handleUpdateTask = (colId, updatedTask) => {
+    axios.put(`http://localhost:8080/tasks/${updatedTask.id}`, {
+      title: updatedTask.title,
+      description: updatedTask.description,
+      column_id: colId,
+    })
+      .then(() => {
+        setColumns(prev =>
+          prev.map(col =>
+            col.id === colId
+              ? {
+                ...col,
+                tasks: col.tasks.map(t =>
+                  t.id === updatedTask.id ? { ...t, ...updatedTask } : t
+                ),
+              }
+              : col
+          )
+        );
+        setEditingTask(null);
+        setEditingTaskColId(null);
+      })
+      .catch(err => console.error("Error updating task:", err));
   };
 
   // currently dragged task
@@ -392,6 +421,15 @@ function TaskManagement() {
     });
   };
 
+  //to open the edit modal
+  const requestEditTask = (colId, taskId) => {
+    const col = columns.find(c => c.id === colId);
+    if (!col) return;
+    const task = col.tasks.find(t => t.id === taskId);
+    if (!task) return;
+    setEditingTask(task);
+    setEditingTaskColId(colId);
+  };
 
 
   return (
@@ -464,7 +502,7 @@ function TaskManagement() {
                     description={task.description}
                     threeDotsIcon={threeDotsIcon}
                     columns={columns}
-                    onEdit={(taskId) => console.log("Edit task", taskId)}
+                    onEdit={(taskId) => requestEditTask(col.id, taskId)}   // <- use helper
                     onDelete={(taskId) => requestDeleteTask(col.id, taskId)}
                     onMove={(taskId, targetColId) => console.log("Move task", taskId, "to column", targetColId)}
                   />
@@ -497,16 +535,31 @@ function TaskManagement() {
           />
         )}
 
-      </DndContext> {
+      </DndContext>
 
-        /* Create Task Modal */}
+      {/* Create Task Modal */}
       {showCreateTasks && (
         <CreateTasks
           onClose={() => setShowCreateTasks(null)}
-          onSave={(task) => handleSaveTask(showCreateTasks, task)}
+          columnId={showCreateTasks}              // pass column id so server can use position/column
+          onSave={(taskPayload) => handleSaveTask(showCreateTasks, taskPayload)}
         />
       )}
 
+      {/* Edit task modal */}
+      {editingTask && (
+        <CreateTasks
+          task={editingTask}
+          columnId={editingTaskColId}
+          onClose={() => {
+            setEditingTask(null);
+            setEditingTaskColId(null);
+          }}
+          onSave={(updatedPayload) => handleUpdateTask(editingTaskColId, updatedPayload)}
+        />
+      )}
+
+      {/* Edit Project Modal */}
       {showEditingProject && (
         <EditProject
           project={project}
