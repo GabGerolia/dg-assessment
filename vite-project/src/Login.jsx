@@ -93,14 +93,14 @@ function Login() {
           </button>
 
           {/* Forgot password */}
-          <div className="text-right">
+          {/* <div className="text-right">
             <a
               href="#"
               className="text-sm text-[var(--secondary)] hover:underline"
             >
               Forgot Password?
             </a>
-          </div>
+          </div> */}
         </div>
 
         {/* Signup link */}
