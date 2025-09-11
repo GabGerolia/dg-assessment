@@ -233,6 +233,28 @@ app.put("/columns/:id/position", (req, res) => {
   );
 });
 
+// Delete column and its tasks
+app.delete("/columns/:id", (req, res) => {
+  const { id } = req.params;
+
+  // First delete tasks inside the column (to maintain referential integrity)
+  db.query("DELETE FROM tasks WHERE column_id = ?", [id], (err) => {
+    if (err) {
+      console.error("Error deleting tasks in column:", err);
+      return res.status(500).json({ success: false });
+    }
+
+    // Then delete the column itself
+    db.query("DELETE FROM columns WHERE id = ?", [id], (err2) => {
+      if (err2) {
+        console.error("Error deleting column:", err2);
+        return res.status(500).json({ success: false });
+      }
+
+      res.json({ success: true });
+    });
+  });
+});
 
 // === TASKS ===
 
@@ -350,3 +372,4 @@ app.delete("/tasks/:id", (req, res) => {
     res.json({ success: true });
   });
 });
+

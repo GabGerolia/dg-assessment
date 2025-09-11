@@ -10,6 +10,7 @@ import SortableColumn from "./SortableColumn";
 import CreateColumn from "./CreateColumn";
 import CreateTasks from "./CreateTasks";
 import EditProject from "./EditProject";
+import ConfirmDialog from "./ConfirmDialog";
 
 function TaskManagement() {
   //fetch project title and description 
@@ -320,6 +321,63 @@ function TaskManagement() {
   };
 
 
+  // delete column
+  const handleDeleteColumn = (colId) => {
+    axios.delete(`http://localhost:8080/columns/${colId}`)
+      .then(() => {
+        setColumns(prev => prev.filter(c => c.id !== colId));
+      })
+      .catch(err => console.error("Error deleting column:", err));
+  };
+
+
+  //confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  // delete task with confirmation
+  const requestDeleteTask = (colId, taskId) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Task",
+      message: "Are you sure you want to delete this task?",
+      onConfirm: () => {
+        axios.delete(`http://localhost:8080/tasks/${taskId}`)
+          .then(() => {
+            setColumns(prev =>
+              prev.map(col =>
+                col.id === colId
+                  ? { ...col, tasks: col.tasks.filter(t => t.id !== taskId) }
+                  : col
+              )
+            );
+          })
+          .catch(err => console.error("Error deleting task:", err));
+      },
+    });
+  };
+
+  // delete column with confirmation
+  const requestDeleteColumn = (colId) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Column",
+      message: "Deleting this column will also remove all its tasks. Are you sure?",
+      onConfirm: () => {
+        axios.delete(`http://localhost:8080/columns/${colId}`)
+          .then(() => {
+            setColumns(prev => prev.filter(c => c.id !== colId));
+          })
+          .catch(err => console.error("Error deleting column:", err));
+      },
+    });
+  };
+
+
   return (
     <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
       <Navbar />
@@ -375,7 +433,7 @@ function TaskManagement() {
                 threeDotsIcon={threeDotsIcon}
                 onAddTask={() => setShowCreateTasks(col.id)}
                 onEdit={() => console.log("Edit column", col.id)}
-                onDelete={() => console.log("Delete column", col.id)}
+                onDelete={() => requestDeleteColumn(col.id)}
                 onMoveLeft={() => console.log("Move left", col.id)}
                 onMoveRight={() => console.log("Move right", col.id)}
               >
@@ -388,7 +446,7 @@ function TaskManagement() {
                     threeDotsIcon={threeDotsIcon}
                     columns={columns}
                     onEdit={(taskId) => console.log("Edit task", taskId)}
-                    onDelete={(taskId) => handleDeleteTask(col.id, taskId)}
+                    onDelete={(taskId) => requestDeleteTask(col.id, taskId)}
                     onMove={(taskId, targetColId) => console.log("Move task", taskId, "to column", targetColId)}
                   />
                 ))}
@@ -432,6 +490,17 @@ function TaskManagement() {
           onUpdate={handleUpdateProject}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm();
+          setConfirmDialog({ ...confirmDialog, isOpen: false });
+        }}
+        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+      />
 
     </div>
   );
