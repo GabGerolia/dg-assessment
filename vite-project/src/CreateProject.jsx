@@ -26,7 +26,7 @@ function CreateProject({ onClose, onCreate }) {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
       // onClick={handleClose}
     >
       <div
