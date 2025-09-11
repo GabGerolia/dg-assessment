@@ -6,7 +6,7 @@ function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
   return (
     <div
       className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
-      onClick={onCancel} // click outside closes
+      // onClick={onCancel} // click outside closes
     >
       <div
         className="bg-[var(--bg)] text-[var(--text)] p-6 rounded-2xl shadow-lg w-80 border border-[var(--border)]"
