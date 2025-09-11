@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { exitIcon } from "./constVars";
 
 function CreateTasks({ onClose, onSave, task = null, columnId = null }) {
   const [title, setTitle] = useState(task?.title || "");
@@ -57,7 +58,7 @@ function CreateTasks({ onClose, onSave, task = null, columnId = null }) {
           onClick={handleClose}
           className="absolute top-3 right-3 text-[var(--text-muted)] hover:text-[var(--danger)] transition"
         >
-          ✕
+          {exitIcon}
         </button>
 
         <h1 className="text-2xl font-bold text-center mb-4">

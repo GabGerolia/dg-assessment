@@ -1,12 +1,12 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState, useRef, useEffect } from "react";
+import { threeDotsIcon } from "./constVars";
 
 function TaskCard({
   id,
   title,
   description,
-  threeDotsIcon,
   isOverlay,
   onEdit,
   onDelete,

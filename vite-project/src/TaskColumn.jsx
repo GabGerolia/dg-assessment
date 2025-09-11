@@ -1,13 +1,13 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useState, useRef, useEffect } from "react";
+import { threeDotsIcon } from "./constVars";
 
 function TaskColumn({
   id,
   title,
   color,
   children,
-  threeDotsIcon,
   tasks,
   dragHandle, // passed from SortableColumn, usually listeners (and optionally attributes)
   onAddTask,

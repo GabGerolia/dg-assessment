@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { presetColors } from "./constVars.js";
+import { presetColors } from "./constVars";
+import { exitIcon } from "./constVars";
 
 function CreateColumn({ onClose, onSave, column }) {
   const [title, setTitle] = useState("");
@@ -56,7 +57,7 @@ function CreateColumn({ onClose, onSave, column }) {
           onClick={handleClose}
           className="absolute top-3 right-3 text-[var(--text-muted)] hover:text-[var(--danger)] transition"
         >
-          ✕
+          {exitIcon}
         </button>
 
         <h1 className="text-2xl font-bold text-center mb-4">

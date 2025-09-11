@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { exitIcon } from "./constVars";
 
 function EditProject({ onClose, onUpdate, project }) {
   const [title, setTitle] = useState(project?.title || "");
@@ -42,7 +43,7 @@ function EditProject({ onClose, onUpdate, project }) {
           onClick={handleClose}
           className="absolute top-3 right-3 text-[var(--text-muted)] hover:text-[var(--danger)] transition"
         >
-          ✕
+          {exitIcon}
         </button>
 
         <h1 className="text-2xl font-bold text-center mb-4">Edit Project</h1>

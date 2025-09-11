@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { exitIcon } from "./constVars";
 
 function CreateProject({ onClose, onCreate }) {
   const [title, setTitle] = useState("");
@@ -37,7 +38,7 @@ function CreateProject({ onClose, onCreate }) {
           onClick={handleClose}
           className="absolute top-3 right-3 text-[var(--text-muted)] hover:text-[var(--danger)] transition"
         >
-          ✕
+          {exitIcon}
         </button>
 
         <h1 className="text-2xl font-bold text-center mb-4">Create Project</h1>
