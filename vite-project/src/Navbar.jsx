@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "./UserContext";
 import ConfirmDialog from "./ConfirmDialog";
+import { darkIcon, lightIcon } from "./constVars";
 
 function Navbar() {
   const { user, setUser } = useUser();
   const [theme, setTheme] = useState("dark");
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
-  
+
   // show confirm logout
   const handleLogoutConfirm = () => {
     setShowConfirm(true);
@@ -55,33 +56,9 @@ function Navbar() {
           aria-label="Toggle dark mode"
         >
           {theme === "dark" ? (
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 3v1m0 16v1m8.66-13.66l-.71.71M4.05 19.95l-.71.71M21 12h-1M4 12H3m16.66 5.66l-.71-.71M4.05 4.05l-.71-.71M12 7a5 5 0 100 10 5 5 0 000-10z"
-              />
-            </svg>
+            darkIcon 
           ) : (
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"
-              />
-            </svg>
+            lightIcon
           )}
         </button>
 
@@ -107,15 +84,15 @@ function Navbar() {
         </button>
       </div>
 
-      
-        {/* Confirm Log out */}
-        <ConfirmDialog
-          isOpen={showConfirm}
-          title="Log out?"
-          message="Are you sure you want to log out?"
-          onConfirm={() => handleLogout()}
-          onCancel={() => setShowConfirm(false)}
-        />
+
+      {/* Confirm Log out */}
+      <ConfirmDialog
+        isOpen={showConfirm}
+        title="Log out?"
+        message="Are you sure you want to log out?"
+        onConfirm={() => handleLogout()}
+        onCancel={() => setShowConfirm(false)}
+      />
     </nav>
   );
 }
