@@ -47,7 +47,7 @@ function CreateTasks({ onClose, onSave, task = null, columnId = null }) {
   return (
     <div
       className="fixed inset-0 flex items-center justify-center bg-black/50 z-99"
-      onClick={handleClose}
+    //   onClick={handleClose}
     >
       <div
         className="relative bg-[var(--bg)] text-[var(--text)] p-8 rounded-2xl shadow-lg w-96 border border-[var(--border)]"
