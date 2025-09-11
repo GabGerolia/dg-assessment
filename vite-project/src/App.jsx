@@ -1,10 +1,10 @@
-// App.jsx
 import { Routes, Route } from "react-router-dom";
 import Login from "./Login";
 import Home from "./Home";
 import Signup from "./Signup";
 import { UserProvider } from "./UserContext";
 import TaskManagement from "./TaskManagement";
+import Logs from "./Logs";
 
 function App() {
   return (
@@ -13,6 +13,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/home" element={<Home />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/try" element={<Logs />} />
         <Route path="/TaskManagement/:projectId" element={<TaskManagement />} />
       </Routes>
     </UserProvider>
