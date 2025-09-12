@@ -13,7 +13,6 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/home" element={<Home />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/try" element={<Logs />} />
         <Route path="/TaskManagement/:projectId" element={<TaskManagement />} />
       </Routes>
     </UserProvider>

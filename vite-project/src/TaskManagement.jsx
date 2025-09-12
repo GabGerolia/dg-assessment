@@ -5,7 +5,6 @@ import { useLocation, useParams } from "react-router-dom";
 import { threeDotsIcon, deleteIcon, editIcon } from "./constVars";
 import axios from "axios";
 
-
 import Navbar from "./Navbar";
 import TaskCard from "./TaskCard";
 import SortableColumn from "./SortableColumn";
@@ -13,8 +12,12 @@ import CreateColumn from "./CreateColumn";
 import CreateTasks from "./CreateTasks";
 import EditProject from "./EditProject";
 import ConfirmDialog from "./ConfirmDialog";
+import Logs from "./Logs";
 
 function TaskManagement() {
+  //state for logs modal
+  const [showLogs, setShowLogs] = useState(false);
+
   //fetch project title and description 
   const { projectId } = useParams(); // comes from /TaskManagement/:projectId
   const [project, setProject] = useState(null);
@@ -441,7 +444,9 @@ function TaskManagement() {
           onClick={() => setShowCreateColumn(true)}>
           Create Column
         </button>
-        <button type="button" className="px-4 py-2 rounded-lg bg-[var(--secondary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition">
+        <button type="button" className="px-4 py-2 rounded-lg bg-[var(--secondary)] text-[var(--bg-dark)] font-medium hover:opacity-90 transition"
+          onClick={() => setShowLogs(true)}
+        >
           View logs
         </button>
       </div>
@@ -561,6 +566,10 @@ function TaskManagement() {
         }}
         onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
       />
+      {showLogs && (
+        <Logs onClose={() => setShowLogs(false)} />
+      )}
+
     </div>
   );
 }
