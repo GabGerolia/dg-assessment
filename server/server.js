@@ -341,38 +341,58 @@ app.get("/columns/:columnId/tasks", (req, res) => {
 // Create a new task
 app.post("/columns/:columnId/tasks", (req, res) => {
   const { columnId } = req.params;
-  const { title, description } = req.body;
+  const { title, description, userId } = req.body;
 
-  // find max position in that column
-  db.query(
-    "SELECT COALESCE(MAX(position), -1) + 1 AS nextPos FROM tasks WHERE column_id = ?",
-    [columnId],
-    (err, result) => {
-      if (err) return res.status(500).json({ success: false });
-
-      const nextPos = result[0].nextPos;
-
-      db.query(
-        "INSERT INTO tasks (column_id, title, description, created_at, position) VALUES (?, ?, ?, NOW(), ?)",
-        [columnId, title, description, nextPos],
-        (err2, insertResult) => {
-          if (err2) {
-            console.error("Error creating task:", err2);
-            return res.status(500).json({ success: false });
-          }
-
-          res.json({
-            id: insertResult.insertId,
-            column_id: parseInt(columnId, 10),
-            title,
-            description,
-            created_at: new Date(),
-            position: nextPos,
-          });
-        }
-      );
+  const projectSql = "SELECT project_id FROM columns WHERE id = ?";
+  db.query(projectSql, [columnId], (projErr, projRows) => {
+    if (projErr) {
+      console.error("Error finding project_id:", projErr);
+      return res.status(500).json({ success: false });
     }
-  );
+    if (!projRows.length) {
+      return res.status(404).json({ success: false, message: "Column not found" });
+    }
+
+    const projectId = projRows[0].project_id;
+
+    // Find next position in this column
+    db.query(
+      "SELECT COALESCE(MAX(position), -1) + 1 AS nextPos FROM tasks WHERE column_id = ?",
+      [columnId],
+      (err, result) => {
+        if (err) return res.status(500).json({ success: false });
+
+        const nextPos = result[0].nextPos;
+
+        // Insert task
+        db.query(
+          "INSERT INTO tasks (column_id, title, description, created_at, position) VALUES (?, ?, ?, NOW(), ?)",
+          [columnId, title, description, nextPos],
+          (err2, insertResult) => {
+            if (err2) {
+              console.error("Error creating task:", err2);
+              return res.status(500).json({ success: false });
+            }
+
+            // Insert log if userId is available
+            if (userId) {
+              addLog(projectId, userId, `Created task "${title}"`);
+            }
+
+            // Respond with new task
+            res.json({
+              id: insertResult.insertId,
+              column_id: parseInt(columnId, 10),
+              title,
+              description,
+              created_at: new Date(),
+              position: nextPos,
+            });
+          }
+        );
+      }
+    );
+  });
 });
 
 
@@ -411,18 +431,62 @@ app.put("/columns/:columnId/tasks/reorder", (req, res) => {
 // Update task
 app.put("/tasks/:id", (req, res) => {
   const { id } = req.params;
-  const { title, description, column_id } = req.body; // column_id optional (for moving)
-  db.query(
-    "UPDATE tasks SET title = ?, description = ?, column_id = ? WHERE id = ?",
-    [title, description, column_id, id],
-    (err) => {
-      if (err) {
-        console.error("Error updating task:", err);
-        return res.status(500).json({ success: false });
-      }
-      res.json({ success: true });
+  const { title, description, column_id, userId } = req.body;
+
+  // Get old task details before update
+  const getOldSql = "SELECT title, description, column_id FROM tasks WHERE id = ?";
+  db.query(getOldSql, [id], (getErr, oldRows) => {
+    if (getErr) {
+      console.error("Error fetching old task:", getErr);
+      return res.status(500).json({ success: false });
     }
-  );
+    if (!oldRows.length) {
+      return res.status(404).json({ success: false, message: "Task not found" });
+    }
+
+    const oldTitle = oldRows[0].title;
+    const oldDescription = oldRows[0].description || "";
+
+    db.query(
+      "UPDATE tasks SET title = ?, description = ?, column_id = ? WHERE id = ?",
+      [title, description, column_id, id],
+      (updateErr) => {
+        if (updateErr) {
+          console.error("Error updating task:", updateErr);
+          return res.status(500).json({ success: false });
+        }
+
+        // Find project_id via column
+        const findSql = `
+          SELECT c.project_id 
+          FROM tasks t
+          JOIN columns c ON t.column_id = c.id
+          WHERE t.id = ?
+        `;
+        db.query(findSql, [id], (findErr, rows) => {
+          if (findErr) {
+            console.error("Error fetching project_id for task:", findErr);
+            return res.status(500).json({ success: false });
+          }
+          if (!rows.length) {
+            return res.status(404).json({ success: false, message: "Task not found" });
+          }
+
+          const projectId = rows[0].project_id;
+
+          // Insert log
+          if (userId) {
+            const logMsg = `Updated task: title from "${oldTitle}" to "${title}", description from "${oldDescription}" to "${description}"`;
+            addLog(projectId, userId, logMsg);
+          } else {
+            console.warn("No userId provided for task update log, skipping insert.");
+          }
+
+          res.json({ success: true });
+        });
+      }
+    );
+  });
 });
 
 // Delete task

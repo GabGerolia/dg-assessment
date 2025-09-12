@@ -80,7 +80,8 @@ function Logs({ projectId, onClose }) {
                 className="p-3 rounded-lg bg-[var(--bg-light)] border border-[var(--border-muted)]"
               >
                 <p className="text-sm truncate">
-                  User <span className="font-semibold">{log.userName}</span> {log.description}
+                  {/* User <span className="font-semibold">{log.userName}</span>  */} 
+                  {log.description}
                 </p>
                 <p className="text-xs text-[var(--text-muted)]">
                   {new Date(log.created_at).toLocaleString()}
