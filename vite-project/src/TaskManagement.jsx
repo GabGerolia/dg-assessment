@@ -466,6 +466,47 @@ function TaskManagement() {
     setEditingTaskColId(colId);
   };
 
+  const handleMoveTask = (taskId, targetColId) => {
+    setColumns((prev) => {
+      const newCols = prev.map((c) => ({ ...c, tasks: [...c.tasks] }));
+
+      const sourceCol = newCols.find((c) => (c.tasks || []).some((t) => t.id === taskId));
+      const destCol = newCols.find((c) => String(c.id) === String(targetColId));
+      if (!sourceCol || !destCol) return prev;
+
+      const taskIndex = sourceCol.tasks.findIndex((t) => t.id === taskId);
+      if (taskIndex === -1) return prev;
+      const [movedTask] = sourceCol.tasks.splice(taskIndex, 1);
+
+      // add to destination at end
+      destCol.tasks.push(movedTask);
+
+      // persist DB: update task with new column + position
+      const newPosition = destCol.tasks.length - 1;
+      axios.put(`http://localhost:8080/tasks/${movedTask.id}`, {
+        title: movedTask.title,
+        description: movedTask.description,
+        column_id: targetColId,
+        position: newPosition,   // send position!
+        userId: user?.id,
+      }).catch(err => console.error("Error moving task:", err));
+
+      // re-save positions of both columns
+      const sourceIds = sourceCol.tasks.map((t, i) => t.id);
+      const destIds = destCol.tasks.map((t, i) => t.id);
+
+      axios.put(`http://localhost:8080/columns/${sourceCol.id}/tasks/reorder`, {
+        orderedTaskIds: sourceIds,
+      }).catch(err => console.error("Error reordering source column:", err));
+
+      axios.put(`http://localhost:8080/columns/${targetColId}/tasks/reorder`, {
+        orderedTaskIds: destIds,
+      }).catch(err => console.error("Error reordering dest column:", err));
+
+      return newCols;
+    });
+  };
+
 
   return (
     <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">
@@ -528,8 +569,8 @@ function TaskManagement() {
                   setShowCreateColumn(true);
                 }}
                 onDelete={() => requestDeleteColumn(col.id)}
-                onMoveLeft={() => handleMoveLeft(col.id)}  
-                onMoveRight={() => handleMoveRight(col.id)} 
+                onMoveLeft={() => handleMoveLeft(col.id)}
+                onMoveRight={() => handleMoveRight(col.id)}
               >
                 {(col.tasks || []).map((task) => (
                   <TaskCard
@@ -541,7 +582,7 @@ function TaskManagement() {
                     columns={columns}
                     onEdit={(taskId) => requestEditTask(col.id, taskId)}   // <- use helper
                     onDelete={(taskId) => requestDeleteTask(col.id, taskId)}
-                    onMove={(taskId, targetColId) => console.log("Move task", taskId, "to column", targetColId)}
+                    onMove={handleMoveTask}
                   />
                 ))}
               </SortableColumn>

@@ -520,32 +520,24 @@ app.put("/columns/:columnId/tasks/reorder", (req, res) => {
 // Update task
 app.put("/tasks/:id", (req, res) => {
   const { id } = req.params;
-  const { title, description, column_id, userId } = req.body;
+  const { title, description, column_id, position, userId } = req.body;
 
-  // Get old task details before update
-  const getOldSql = "SELECT title, description, column_id FROM tasks WHERE id = ?";
+  const getOldSql = "SELECT title, description, column_id, position FROM tasks WHERE id = ?";
   db.query(getOldSql, [id], (getErr, oldRows) => {
-    if (getErr) {
-      console.error("Error fetching old task:", getErr);
-      return res.status(500).json({ success: false });
-    }
-    if (!oldRows.length) {
-      return res.status(404).json({ success: false, message: "Task not found" });
-    }
+    if (getErr) return res.status(500).json({ success: false });
+    if (!oldRows.length) return res.status(404).json({ success: false });
 
     const oldTitle = oldRows[0].title;
-    const oldDescription = oldRows[0].description || "";
+    const oldDesc = oldRows[0].description || "";
+    const oldPos = oldRows[0].position;
 
     db.query(
-      "UPDATE tasks SET title = ?, description = ?, column_id = ? WHERE id = ?",
-      [title, description, column_id, id],
+      "UPDATE tasks SET title = ?, description = ?, column_id = ?, position = ? WHERE id = ?",
+      [title, description, column_id, position, id],
       (updateErr) => {
-        if (updateErr) {
-          console.error("Error updating task:", updateErr);
-          return res.status(500).json({ success: false });
-        }
+        if (updateErr) return res.status(500).json({ success: false });
 
-        // Find project_id via column
+        // fetch project_id for log
         const findSql = `
           SELECT c.project_id 
           FROM tasks t
@@ -553,22 +545,14 @@ app.put("/tasks/:id", (req, res) => {
           WHERE t.id = ?
         `;
         db.query(findSql, [id], (findErr, rows) => {
-          if (findErr) {
-            console.error("Error fetching project_id for task:", findErr);
-            return res.status(500).json({ success: false });
-          }
-          if (!rows.length) {
-            return res.status(404).json({ success: false, message: "Task not found" });
-          }
+          if (findErr) return res.status(500).json({ success: false });
+          if (!rows.length) return res.status(404).json({ success: false });
 
           const projectId = rows[0].project_id;
 
-          // Insert log
           if (userId) {
-            const logMsg = `Updated task: title from "${oldTitle}" → "${title}", description from "${oldDescription}" → "${description}"`;
+            const logMsg = `Updated task "${oldTitle}" → "${title}", description "${oldDesc}" → "${description}", position ${oldPos} → ${position}`;
             addLog(projectId, userId, logMsg);
-          } else {
-            console.warn("No userId provided for task update log, skipping insert.");
           }
 
           res.json({ success: true });
@@ -577,6 +561,7 @@ app.put("/tasks/:id", (req, res) => {
     );
   });
 });
+
 
 // Delete task
 app.delete("/tasks/:id", (req, res) => {
