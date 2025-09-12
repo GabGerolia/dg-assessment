@@ -78,8 +78,8 @@ function Logs({ projectId, onClose }) {
               <div
                 key={log.id}
                 className="p-3 rounded-lg bg-[var(--bg-light)] border border-[var(--border-muted)]"
-              >
-                <p className="text-sm truncate">
+              > 
+                <p className="text-sm truncate" title={log.description}>
                   {/* User <span className="font-semibold">{log.userName}</span>  */} 
                   {log.description}
                 </p>
