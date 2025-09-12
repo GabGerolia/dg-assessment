@@ -9,14 +9,14 @@ function Logs({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-[var(--bg)] text-[var(--text)] w-[700px] max-h-[70vh] rounded-2xl shadow-xl flex flex-col">
-        
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
+      <div className="bg-[var(--bg)] text-[var(--text)] w-[700px] max-h-[70vh] rounded-2xl shadow-xl flex flex-col border border-[var(--border)]">
+
         {/* Toolbar */}
         <div className="flex items-center justify-between border-b border-[var(--border)] p-4">
           <h1 className="text-xl font-semibold">Audit Logs</h1>
           <div className="flex items-center gap-2">
-            
+
             {/* Sort toggle */}
             <div className="relative group">
               <button
@@ -46,7 +46,7 @@ function Logs({ onClose }) {
         </div>
 
         {/* Log entries */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <div className="bg-[var(--bg-dark)] flex-1 overflow-y-auto p-4 space-y-2 rounded-b-2xl">
           {/* Example log entry */}
           <div className="p-3 rounded-lg bg-[var(--bg-light)] border border-[var(--border-muted)]">
             <p className="text-sm truncate max-w-[700px]">
