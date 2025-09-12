@@ -25,6 +25,18 @@ db.connect((err) => {
   console.log("Connected to MySQL database.");
 });
 
+// helper to insert log entries (non-blocking)
+function addLog(projectId, userId, description) {
+  if (!projectId || !userId || !description) {
+    console.warn("addLog missing fields:", { projectId, userId, description });
+    return;
+  }
+  const sql = "INSERT INTO logs (project_id, user_id, description) VALUES (?, ?, ?)";
+  db.query(sql, [projectId, userId, description], (err) => {
+    if (err) console.error("Error inserting log:", err);
+  });
+}
+
 // Get a single project by ID
 app.get("/api/project/:id", (req, res) => {
   const { id } = req.params;
@@ -416,14 +428,46 @@ app.put("/tasks/:id", (req, res) => {
 // Delete task
 app.delete("/tasks/:id", (req, res) => {
   const { id } = req.params;
-  db.query("DELETE FROM tasks WHERE id = ?", [id], (err) => {
+  // Accept userId either in body (preferred for DELETE) or query fallback
+  const userId = req.body?.userId ?? req.query?.userId;
+
+  // Fetch project_id and title of the task
+  const findSql = `
+    SELECT c.project_id, t.title
+    FROM tasks t
+    JOIN columns c ON t.column_id = c.id
+    WHERE t.id = ?
+  `;
+  db.query(findSql, [id], (err, rows) => {
     if (err) {
-      console.error("Error deleting task:", err);
-      return res.status(500).json({ success: false });
+      console.error("Error looking up task/project:", err);
+      return res.status(500).json({ success: false, error: "Database error" });
     }
-    res.json({ success: true });
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: "Task not found" });
+    }
+
+    const { project_id: projectId, title } = rows[0];
+
+    // Now delete the task
+    db.query("DELETE FROM tasks WHERE id = ?", [id], (delErr) => {
+      if (delErr) {
+        console.error("Error deleting task:", delErr);
+        return res.status(500).json({ success: false, error: "Database error" });
+      }
+
+      // Insert log (only if userId provided)
+      if (userId) {
+        addLog(projectId, userId, `Deleted task named "${title}"`);
+      } else {
+        console.warn("No userId supplied for task delete log, skipping insert.");
+      }
+
+      res.json({ success: true });
+    });
   });
 });
+
 
 
 //===LOGS===

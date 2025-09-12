@@ -13,8 +13,12 @@ import CreateTasks from "./CreateTasks";
 import EditProject from "./EditProject";
 import ConfirmDialog from "./ConfirmDialog";
 import Logs from "./Logs";
+import { useUser } from "./UserContext";
 
 function TaskManagement() {
+  //get user who logged in
+  const { user } = useUser();
+  
   //state for logs modal
   const [showLogs, setShowLogs] = useState(false);
 
@@ -43,7 +47,7 @@ function TaskManagement() {
   //editing project title/description
   const [showEditingProject, setShowEditingProject] = useState(false);
   const handleUpdateProject = (updatedProject) => {
-    axios.put(`http://localhost:8080/api/projects/${project.id}`, {
+    axios.put(`http://localhost:8080/api/projects/${project.id}`,{data: { userId: user?.id }}, {
       title: updatedProject.title,
       description: updatedProject.description,
     })
@@ -86,7 +90,7 @@ function TaskManagement() {
   const handleSaveColumn = ({ id, title, color }) => {
     if (id) {
       // update
-      axios.put(`http://localhost:8080/columns/${id}`, { title, color })
+      axios.put(`http://localhost:8080/columns/${id}`, { title, color },{data: { userId: user?.id }})
         .then(() => {
           setColumns(prev =>
             prev.map(c => c.id === id ? { ...c, title, color } : c)
@@ -97,7 +101,7 @@ function TaskManagement() {
         .catch(err => console.error("Error updating column:", err));
     } else {
       // create
-      axios.post(`http://localhost:8080/projects/${projectId}/columns`, {
+      axios.post(`http://localhost:8080/projects/${projectId}/columns`,{data: { userId: user?.id }}, {
         title,
         color,
         position: columns.length,
@@ -127,7 +131,7 @@ function TaskManagement() {
   //creation of tasks
   const [showCreateTasks, setShowCreateTasks] = useState(null);
   const handleSaveTask = (colId, { title, description }) => {
-    axios.post(`http://localhost:8080/columns/${colId}/tasks`, {
+    axios.post(`http://localhost:8080/columns/${colId}/tasks`,{data: { userId: user?.id }}, {
       title,
       description,
     })
@@ -151,7 +155,7 @@ function TaskManagement() {
 
   // updating task at edit
   const handleUpdateTask = (colId, updatedTask) => {
-    axios.put(`http://localhost:8080/tasks/${updatedTask.id}`, {
+    axios.put(`http://localhost:8080/tasks/${updatedTask.id}`,{data: { userId: user?.id }}, {
       title: updatedTask.title,
       description: updatedTask.description,
       column_id: colId,
@@ -337,7 +341,7 @@ function TaskManagement() {
 
   // delete task
   const handleDeleteTask = (colId, taskId) => {
-    axios.delete(`http://localhost:8080/tasks/${taskId}`)
+    axios.delete(`http://localhost:8080/tasks/${taskId}`,{data: { userId: user?.id }})
       .then(() => {
         setColumns(prev =>
           prev.map(col =>
@@ -353,7 +357,7 @@ function TaskManagement() {
 
   // delete column
   const handleDeleteColumn = (colId) => {
-    axios.delete(`http://localhost:8080/columns/${colId}`)
+    axios.delete(`http://localhost:8080/columns/${colId}`,{data: { userId: user?.id }})
       .then(() => {
         setColumns(prev => prev.filter(c => c.id !== colId));
       })
@@ -376,7 +380,7 @@ function TaskManagement() {
       title: "Delete Task",
       message: "Are you sure you want to delete this task?",
       onConfirm: () => {
-        axios.delete(`http://localhost:8080/tasks/${taskId}`)
+        axios.delete(`http://localhost:8080/tasks/${taskId}`,{data: { userId: user?.id }})
           .then(() => {
             setColumns(prev =>
               prev.map(col =>
@@ -398,7 +402,7 @@ function TaskManagement() {
       title: "Delete Column",
       message: "Deleting this column will also remove all its tasks. Are you sure?",
       onConfirm: () => {
-        axios.delete(`http://localhost:8080/columns/${colId}`)
+        axios.delete(`http://localhost:8080/columns/${colId}`,{data: { userId: user?.id }})
           .then(() => {
             setColumns(prev => prev.filter(c => c.id !== colId));
           })
