@@ -19,6 +19,12 @@ function EditProject({ onClose, onUpdate, project }) {
       return;
     }
 
+    if (project && title === project.title && description === (project.description || "")) {
+      setReminder("You didn't change anything.");
+      return;
+    }
+
+
     onUpdate({ id: project.id, title, description });
     setReminder("");
   };

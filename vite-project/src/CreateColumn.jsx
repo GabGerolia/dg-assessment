@@ -24,6 +24,12 @@ function CreateColumn({ onClose, onSave, column }) {
       return;
     }
 
+    if (column && title === column.title && selectedColor === (column.color || "")) {
+      setReminder("You didn't change anything.");
+      return;
+    }
+
+
     onSave({
       id: column?.id,  // include id if editing
       title,
@@ -89,11 +95,10 @@ function CreateColumn({ onClose, onSave, column }) {
                 type="button"
                 onClick={() => setSelectedColor(color)}
                 style={{ backgroundColor: color }}
-                className={`w-8 h-8 rounded-lg border-2 transition ${
-                  selectedColor === color
+                className={`w-8 h-8 rounded-lg border-2 transition ${selectedColor === color
                     ? "border-[var(--primary)] scale-110"
                     : "border-transparent"
-                }`}
+                  }`}
               />
             ))}
 
@@ -102,11 +107,10 @@ function CreateColumn({ onClose, onSave, column }) {
               type="button"
               onClick={() => setSelectedColor("var(--border)")}
               style={{ backgroundColor: "var(--border)" }}
-              className={`w-8 h-8 rounded-lg border-2 transition ${
-                selectedColor === "var(--border)"
+              className={`w-8 h-8 rounded-lg border-2 transition ${selectedColor === "var(--border)"
                   ? "border-[var(--primary)] scale-110"
                   : "border-transparent"
-              }`}
+                }`}
             />
           </div>
         </div>
