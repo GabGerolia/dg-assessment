@@ -90,7 +90,7 @@ function TaskManagement() {
   const handleSaveColumn = ({ id, title, color }) => {
     if (id) {
       // update
-      axios.put(`http://localhost:8080/columns/${id}`, { title, color })
+      axios.put(`http://localhost:8080/columns/${id}`, { title, color, userId: user?.id, })
         .then(() => {
           setColumns(prev =>
             prev.map(c => c.id === id ? { ...c, title, color } : c)
@@ -105,6 +105,7 @@ function TaskManagement() {
         title,
         color,
         position: columns.length,
+        userId: user?.id,
       })
         .then(res => {
           setColumns(prev => [...prev, { ...res.data, tasks: [] }]); // always include empty tasks
@@ -404,7 +405,7 @@ function TaskManagement() {
       title: "Delete Column",
       message: "Deleting this column will also remove all its tasks. Are you sure?",
       onConfirm: () => {
-        axios.delete(`http://localhost:8080/columns/${colId}`)
+        axios.delete(`http://localhost:8080/columns/${colId}`,{data: { userId: user?.id }})
           .then(() => {
             setColumns(prev => prev.filter(c => c.id !== colId));
           })
