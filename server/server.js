@@ -428,7 +428,6 @@ app.delete("/tasks/:id", (req, res) => {
 
 //===LOGS===
 
-// === LOGS API ===
 
 // Fetch logs for a specific project
 app.get("/api/logs/:projectId", (req, res) => {
