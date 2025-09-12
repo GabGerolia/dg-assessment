@@ -570,6 +570,13 @@ function TaskManagement() {
         <Logs onClose={() => setShowLogs(false)} />
       )}
 
+      {showLogs && (
+        <Logs
+          projectId={projectId}
+          onClose={() => setShowLogs(false)}
+        />
+      )}
+
     </div>
   );
 }
