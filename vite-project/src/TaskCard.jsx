@@ -96,14 +96,14 @@ function TaskCard({
                 Delete
               </button>
               <div className="border-t border-[var(--border)] my-1" />
-              <div className="px-4 py-2 text-xs text-[var(--text-muted)]">
+              <div className="px-4 py-2 text-sm text-[var(--text-muted)]">
                 Move to:
               </div>
               {columns &&
                 columns.map((col) => (
                   <button
                     key={col.id}
-                    className="block w-full px-4 py-2 text-left hover:bg-[var(--bg-light)]"
+                    className="text-xs block w-full px-4 py-2 text-left hover:bg-[var(--bg-light)]"
                     onClick={() => {
                       onMove?.(id, col.id);
                       setMenuOpen(false);
