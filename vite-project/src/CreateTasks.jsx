@@ -18,8 +18,13 @@ function CreateTasks({ onClose, onSave, task = null, columnId = null }) {
       setReminder("Tasks label cannot be empty.");
       return;
     }
-    if (title.length > 200) {
-      setReminder("Task label cannot be longer than 200 characters.");
+    if (title.length > 20) {
+      setReminder("Task label cannot be longer than 20 characters.");
+      return;
+    }
+
+    if (task && title === task.title && description === (task.description || "")) {
+      setReminder("You didn't change anything.");
       return;
     }
 
