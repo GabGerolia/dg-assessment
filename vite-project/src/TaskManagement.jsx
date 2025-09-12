@@ -18,7 +18,7 @@ import { useUser } from "./UserContext";
 function TaskManagement() {
   //get user who logged in
   const { user } = useUser();
-  
+
   //state for logs modal
   const [showLogs, setShowLogs] = useState(false);
 
@@ -135,7 +135,7 @@ function TaskManagement() {
   const handleSaveTask = (colId, { title, description }) => {
     axios.post(`http://localhost:8080/columns/${colId}/tasks`, {
       title,
-      description, 
+      description,
       userId: user?.id,
     })
       .then(res => {
@@ -384,7 +384,7 @@ function TaskManagement() {
       title: "Delete Task",
       message: "Are you sure you want to delete this task?",
       onConfirm: () => {
-        axios.delete(`http://localhost:8080/tasks/${taskId}`,{data: { userId: user?.id }})
+        axios.delete(`http://localhost:8080/tasks/${taskId}`, { data: { userId: user?.id } })
           .then(() => {
             setColumns(prev =>
               prev.map(col =>
@@ -406,7 +406,7 @@ function TaskManagement() {
       title: "Delete Column",
       message: "Deleting this column will also remove all its tasks. Are you sure?",
       onConfirm: () => {
-        axios.delete(`http://localhost:8080/columns/${colId}`,{data: { userId: user?.id }})
+        axios.delete(`http://localhost:8080/columns/${colId}`, { data: { userId: user?.id } })
           .then(() => {
             setColumns(prev => prev.filter(c => c.id !== colId));
           })
@@ -415,7 +415,48 @@ function TaskManagement() {
     });
   };
 
-  //to open the edit modal
+  // Move column left
+  const handleMoveLeft = (colId) => {
+    setColumns((prev) => {
+      const index = prev.findIndex((c) => c.id === colId);
+      if (index > 0) {
+        const reordered = arrayMove(prev, index, index - 1);
+
+        // Persist new positions in DB
+        reordered.forEach((col, idx) => {
+          axios.put(`http://localhost:8080/columns/${col.id}/position`, {
+            position: idx,
+          }).catch(err => console.error("Error updating column position:", err));
+        });
+
+        return reordered;
+      }
+      return prev;
+    });
+  };
+
+  // Move column right
+  const handleMoveRight = (colId) => {
+    setColumns((prev) => {
+      const index = prev.findIndex((c) => c.id === colId);
+      if (index !== -1 && index < prev.length - 1) {
+        const reordered = arrayMove(prev, index, index + 1);
+
+        // Persist new positions in DB
+        reordered.forEach((col, idx) => {
+          axios.put(`http://localhost:8080/columns/${col.id}/position`, {
+            position: idx,
+          }).catch(err => console.error("Error updating column position:", err));
+        });
+
+        return reordered;
+      }
+      return prev;
+    });
+  };
+
+
+  //to open the edit task modal
   const requestEditTask = (colId, taskId) => {
     const col = columns.find(c => c.id === colId);
     if (!col) return;
@@ -487,8 +528,8 @@ function TaskManagement() {
                   setShowCreateColumn(true);
                 }}
                 onDelete={() => requestDeleteColumn(col.id)}
-                onMoveLeft={() => console.log("Move left", col.id)}
-                onMoveRight={() => console.log("Move right", col.id)}
+                onMoveLeft={() => handleMoveLeft(col.id)}  
+                onMoveRight={() => handleMoveRight(col.id)} 
               >
                 {(col.tasks || []).map((task) => (
                   <TaskCard
