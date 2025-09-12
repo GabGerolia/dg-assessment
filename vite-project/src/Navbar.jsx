@@ -6,28 +6,32 @@ import { darkIcon, lightIcon } from "./constVars";
 
 function Navbar() {
   const { user, setUser } = useUser();
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState(() => {
+    // Load theme from localStorage if exists, else default "dark"
+    return localStorage.getItem("theme") || "dark";
+  });
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // show confirm logout
-  const handleLogoutConfirm = () => {
-    setShowConfirm(true);
-  }
-
+  // Apply theme on mount and whenever theme changes
   useEffect(() => {
     document.body.classList.remove("light", "dark");
     document.body.classList.add(theme);
+    localStorage.setItem("theme", theme); 
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === "dark" ? "light" : "dark"));
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
+  const handleLogoutConfirm = () => {
+    setShowConfirm(true);
   };
 
   const handleLogout = () => {
-    setUser(null); // clear context
-    localStorage.removeItem("user"); // clear persistence
-    navigate("/"); // go back to login
+    setUser(null);
+    localStorage.removeItem("user");
+    navigate("/");
   };
 
   return (
@@ -55,11 +59,7 @@ function Navbar() {
           className="p-2 rounded-full hover:bg-[var(--highlight)] transition"
           aria-label="Toggle dark mode"
         >
-          {theme === "dark" ? (
-            darkIcon 
-          ) : (
-            lightIcon
-          )}
+          {theme === "dark" ? darkIcon : lightIcon}
         </button>
 
         {/* Logout */}
@@ -84,13 +84,12 @@ function Navbar() {
         </button>
       </div>
 
-
       {/* Confirm Log out */}
       <ConfirmDialog
         isOpen={showConfirm}
         title="Log out?"
         message="Are you sure you want to log out?"
-        onConfirm={() => handleLogout()}
+        onConfirm={handleLogout}
         onCancel={() => setShowConfirm(false)}
       />
     </nav>
