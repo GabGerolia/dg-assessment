@@ -38,6 +38,7 @@ function Home() {
         .put(`http://localhost:8080/api/projects/${showEditingProject.id}`, {
           title: project.title,
           description: project.description,
+          userId: user?.id,
         })
         .then((res) => {
           if (res.data.success) {

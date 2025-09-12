@@ -50,6 +50,7 @@ function TaskManagement() {
     axios.put(`http://localhost:8080/api/projects/${project.id}`, {
       title: updatedProject.title,
       description: updatedProject.description,
+      userId: user?.id,
     })
       .then((res) => {
         if (res.data.success) {

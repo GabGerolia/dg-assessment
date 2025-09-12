@@ -194,16 +194,43 @@ app.get("/api/projects/:userId", (req, res) => {
 // Update project
 app.put("/api/projects/:id", (req, res) => {
   const { id } = req.params;
-  const { title, description } = req.body;
-  const sql = "UPDATE projects SET title = ?, description = ? WHERE id = ?";
-  db.query(sql, [title, description, id], (err, result) => {
-    if (err) {
-      console.error("Error updating project:", err);
+  const { title, description, userId } = req.body;
+
+  // First get the current values
+  const getSql = "SELECT title, description FROM projects WHERE id = ?";
+  db.query(getSql, [id], (getErr, rows) => {
+    if (getErr) {
+      console.error("Error fetching old project data:", getErr);
       return res.status(500).json({ success: false, error: "Database error" });
     }
-    res.json({ success: true });
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
+
+    const oldTitle = rows[0].title;
+    const oldDesc = rows[0].description;
+
+    // Update with new values
+    const updateSql = "UPDATE projects SET title = ?, description = ? WHERE id = ?";
+    db.query(updateSql, [title, description, id], (updateErr, result) => {
+      if (updateErr) {
+        console.error("Error updating project:", updateErr);
+        return res.status(500).json({ success: false, error: "Database error" });
+      }
+
+      // Insert log if userId is available
+      if (userId) {
+        const logMsg = `Updated project: title "${oldTitle}" → "${title}", description "${oldDesc}" → "${description}"`;
+        addLog(id, userId, logMsg);
+      } else {
+        console.warn("No userId provided for project update log, skipping insert.");
+      }
+
+      res.json({ success: true });
+    });
   });
 });
+
 
 // Delete project
 app.delete("/api/projects/:id", (req, res) => {
@@ -324,7 +351,7 @@ app.put("/columns/:id", (req, res) => {
 
         // Insert log if userId provided
         if (userId) {
-          const logMsg = `Updated column Title from "${oldTitle}" to "${title}" | (color: ${oldColor || "none"}) to (color: ${color || "none"})`;
+          const logMsg = `Updated column Title from "${oldTitle}" → "${title}" | (color: ${oldColor || "none"}) → (color: ${color || "none"})`;
           addLog(projectId, userId, logMsg);
         } else {
           console.warn("No userId provided for column update log, skipping insert.");
@@ -339,7 +366,7 @@ app.put("/columns/:id", (req, res) => {
 // Delete column and its tasks
 app.delete("/columns/:id", (req, res) => {
   const { id } = req.params;
-  const { userId } = req.body; 
+  const { userId } = req.body;
 
   // Fetch column info first
   const getSql = "SELECT title, project_id FROM columns WHERE id = ?";
@@ -538,7 +565,7 @@ app.put("/tasks/:id", (req, res) => {
 
           // Insert log
           if (userId) {
-            const logMsg = `Updated task: title from "${oldTitle}" to "${title}", description from "${oldDescription}" to "${description}"`;
+            const logMsg = `Updated task: title from "${oldTitle}" → "${title}", description from "${oldDescription}" → "${description}"`;
             addLog(projectId, userId, logMsg);
           } else {
             console.warn("No userId provided for task update log, skipping insert.");
