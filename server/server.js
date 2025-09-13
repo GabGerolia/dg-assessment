@@ -246,10 +246,9 @@ app.delete("/api/projects/:id", (req, res) => {
 });
 
 
-//localhost:8080
-app.listen(8080, () => {
-  console.log("Server started on port 8080");
-});
+//localhost:8080 and railway
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 app.get("/projects/:projectId/columns", (req, res) => {
   const { projectId } = req.params;
