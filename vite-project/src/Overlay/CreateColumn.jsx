@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { presetColors } from "./constVars";
-import { exitIcon } from "./constVars";
+import { presetColors } from "../constVars";
+import { exitIcon } from "../constVars";
 
 function CreateColumn({ onClose, onSave, column }) {
   const [title, setTitle] = useState("");

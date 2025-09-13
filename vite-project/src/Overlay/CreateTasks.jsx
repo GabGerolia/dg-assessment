@@ -1,20 +1,45 @@
-import { useState } from "react";
-import { exitIcon } from "./constVars";
+import { useState, useEffect } from "react";
+import { exitIcon } from "../constVars";
 
-function CreateProject({ onClose, onCreate }) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+function CreateTasks({ onClose, onSave, task = null, columnId = null }) {
+  const [title, setTitle] = useState(task?.title || "");
+  const [description, setDescription] = useState(task?.description || "");
   const [reminder, setReminder] = useState("");
 
-  const handleCreate = () => {
+  // keep fields in sync if task prop changes
+  useEffect(() => {
+    setTitle(task?.title || "");
+    setDescription(task?.description || "");
+    setReminder("");
+  }, [task]);
+
+  const handleSave = () => {
     if (!title.trim()) {
-      setReminder("Project title cannot be empty.");
+      setReminder("Tasks label cannot be empty.");
+      return;
+    }
+    if (title.length > 20) {
+      setReminder("Task label cannot be longer than 20 characters.");
       return;
     }
 
-    onCreate({ title, description });
-    setTitle("");
-    setDescription("");
+    if (task && title === task.title && description === (task.description || "")) {
+      setReminder("You didn't change anything.");
+      return;
+    }
+
+    // Build payload. When editing, include id and column_id
+    const payload = { title, description };
+    if (task?.id) payload.id = task.id;
+    if (columnId != null) payload.column_id = columnId;
+
+    onSave(payload);
+
+    // If creating new, clear fields; if editing, parent will close the modal
+    if (!task) {
+      setTitle("");
+      setDescription("");
+    }
     setReminder("");
   };
 
@@ -27,8 +52,8 @@ function CreateProject({ onClose, onCreate }) {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
-      // onClick={handleClose}
+      className="fixed inset-0 flex items-center justify-center bg-black/50 z-99"
+    //   onClick={handleClose}
     >
       <div
         className="relative bg-[var(--bg)] text-[var(--text)] p-8 rounded-2xl shadow-lg w-96 border border-[var(--border)]"
@@ -41,7 +66,9 @@ function CreateProject({ onClose, onCreate }) {
           {exitIcon}
         </button>
 
-        <h1 className="text-2xl font-bold text-center mb-4">Create Project</h1>
+        <h1 className="text-2xl font-bold text-center mb-4">
+          {task ? "Edit Task" : "Create Task"}
+        </h1>
 
         {reminder && (
           <div className="text-[var(--danger)] text-sm text-center mb-4">
@@ -50,15 +77,16 @@ function CreateProject({ onClose, onCreate }) {
         )}
 
         <input
+          required
           type="text"
-          placeholder="Project title"
+          placeholder="Task label"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="w-full border border-[var(--border)] rounded-lg px-4 py-2 mb-4 bg-[var(--bg-light)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
         />
 
         <textarea
-          placeholder="Project description (optional)"
+          placeholder="Task description (optional)"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
@@ -73,10 +101,10 @@ function CreateProject({ onClose, onCreate }) {
             Cancel
           </button>
           <button
-            onClick={handleCreate}
+            onClick={handleSave}
             className="flex-1 bg-[var(--primary)] text-[var(--bg-dark)] font-medium py-2 rounded-lg hover:opacity-90 transition"
           >
-            Create
+            Save
           </button>
         </div>
       </div>
@@ -84,4 +112,4 @@ function CreateProject({ onClose, onCreate }) {
   );
 }
 
-export default CreateProject;
+export default CreateTasks;

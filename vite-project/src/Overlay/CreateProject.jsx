@@ -1,37 +1,26 @@
-import { useState, useEffect } from "react";
-import { exitIcon } from "./constVars";
+import { useState } from "react";
+import { exitIcon } from "../constVars";
 
-function EditProject({ onClose, onUpdate, project }) {
-  const [title, setTitle] = useState(project?.title || "");
-  const [description, setDescription] = useState(project?.description || "");
+function CreateProject({ onClose, onCreate }) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [reminder, setReminder] = useState("");
 
-  useEffect(() => {
-    if (project) {
-      setTitle(project.title || "");
-      setDescription(project.description || "");
-    }
-  }, [project]);
-
-  const handleUpdate = () => {
+  const handleCreate = () => {
     if (!title.trim()) {
       setReminder("Project title cannot be empty.");
       return;
     }
 
-    if (project && title === project.title && description === (project.description || "")) {
-      setReminder("You didn't change anything.");
-      return;
-    }
-
-
-    onUpdate({ id: project.id, title, description });
+    onCreate({ title, description });
+    setTitle("");
+    setDescription("");
     setReminder("");
   };
 
   const handleClose = () => {
-    setTitle(project?.title || "");
-    setDescription(project?.description || "");
+    setTitle("");
+    setDescription("");
     setReminder("");
     onClose();
   };
@@ -39,7 +28,7 @@ function EditProject({ onClose, onUpdate, project }) {
   return (
     <div
       className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
-      onClick={handleClose}
+      // onClick={handleClose}
     >
       <div
         className="relative bg-[var(--bg)] text-[var(--text)] p-8 rounded-2xl shadow-lg w-96 border border-[var(--border)]"
@@ -52,7 +41,7 @@ function EditProject({ onClose, onUpdate, project }) {
           {exitIcon}
         </button>
 
-        <h1 className="text-2xl font-bold text-center mb-4">Edit Project</h1>
+        <h1 className="text-2xl font-bold text-center mb-4">Create Project</h1>
 
         {reminder && (
           <div className="text-[var(--danger)] text-sm text-center mb-4">
@@ -84,10 +73,10 @@ function EditProject({ onClose, onUpdate, project }) {
             Cancel
           </button>
           <button
-            onClick={handleUpdate}
+            onClick={handleCreate}
             className="flex-1 bg-[var(--primary)] text-[var(--bg-dark)] font-medium py-2 rounded-lg hover:opacity-90 transition"
           >
-            Update
+            Create
           </button>
         </div>
       </div>
@@ -95,4 +84,4 @@ function EditProject({ onClose, onUpdate, project }) {
   );
 }
 
-export default EditProject;
+export default CreateProject;

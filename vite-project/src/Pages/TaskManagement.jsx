@@ -9,10 +9,10 @@ import axios from "axios";
 import Navbar from "../Navbar";
 import TaskCard from "../TaskCard";
 import SortableColumn from "../SortableColumn";
-import CreateColumn from "../CreateColumn";
-import CreateTasks from "../CreateTasks";
-import EditProject from "../EditProject";
-import ConfirmDialog from "../ConfirmDialog";
+import CreateColumn from "../Overlay/CreateColumn";
+import CreateTasks from "../Overlay/CreateTasks";
+import EditProject from "../Overlay/EditProject";
+import ConfirmDialog from "../Overlay/ConfirmDialog";
 import Logs from "../Logs";
 
 function TaskManagement() {

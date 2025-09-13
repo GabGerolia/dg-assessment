@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { editIcon, deleteIcon } from "../constVars";
 import axios from "axios";
 
-import CreateProject from "../CreateProject";
-import ConfirmDialog from "../ConfirmDialog";
+import CreateProject from "../Overlay/CreateProject";
+import ConfirmDialog from "../Overlay/ConfirmDialog";
 import Navbar from "../Navbar";
-import EditProject from "../EditProject";
+import EditProject from "../Overlay/EditProject";
 import { useUser } from "../UserContext";
 
 function Home() {

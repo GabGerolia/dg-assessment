@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "./UserContext";
-import ConfirmDialog from "./ConfirmDialog";
+import ConfirmDialog from "./Overlay/ConfirmDialog";
 import { darkIcon, lightIcon } from "./constVars";
 
 function Navbar() {
