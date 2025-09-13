@@ -1,13 +1,16 @@
+require("dotenv").config(); // Load environment variables first
+
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql");
-const app = express();
 
+const app = express();
 
 // allow JSON in requests
 app.use(express.json());
 
-app.use(cors({ origin: ["http://localhost:5173"] }));
+// CORS
+app.use(cors({ origin: ["http://localhost:5173", "https://dg-assessment.vercel.app"] }));
 
 // MySQL connection
 const db = mysql.createConnection({
