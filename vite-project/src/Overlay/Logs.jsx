@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { exitIcon, ascendingIcon, descendingIcon } from "./constVars";
+import { exitIcon, ascendingIcon, descendingIcon } from "../constVars";
 
 function Logs({ projectId, onClose }) {
   const [sortOrder, setSortOrder] = useState("desc");

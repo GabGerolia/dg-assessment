@@ -13,7 +13,7 @@ import CreateColumn from "../Overlay/CreateColumn";
 import CreateTasks from "../Overlay/CreateTasks";
 import EditProject from "../Overlay/EditProject";
 import ConfirmDialog from "../Overlay/ConfirmDialog";
-import Logs from "../Logs";
+import Logs from "../Overlay/Logs";
 
 function TaskManagement() {
   //get user who logged in
