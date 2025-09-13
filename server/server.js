@@ -16,11 +16,12 @@ app.use(cors({ origin: ["https://dg-assessment.vercel.app"] }));
 
 // MySQL connection
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "050503",
-  database: "myDB"
+  host: process.env.DATABASE_HOST,
+  user: process.env.DATABASE_USER,
+  password: process.env.DATABASE_PASSWORD,
+  database: process.env.DATABASE_NAME,
 });
+
 
 db.connect((err) => {
   if (err) {
