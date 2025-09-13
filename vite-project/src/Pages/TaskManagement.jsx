@@ -2,18 +2,18 @@ import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { DndContext, closestCorners, DragOverlay, } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { useLocation, useParams } from "react-router-dom";
-import { threeDotsIcon, deleteIcon, editIcon } from "./constVars";
+import { threeDotsIcon, deleteIcon, editIcon } from "../constVars";
+import { useUser } from "../UserContext";
 import axios from "axios";
 
-import Navbar from "./Navbar";
-import TaskCard from "./TaskCard";
-import SortableColumn from "./SortableColumn";
-import CreateColumn from "./CreateColumn";
-import CreateTasks from "./CreateTasks";
-import EditProject from "./EditProject";
-import ConfirmDialog from "./ConfirmDialog";
-import Logs from "./Logs";
-import { useUser } from "./UserContext";
+import Navbar from "../Navbar";
+import TaskCard from "../TaskCard";
+import SortableColumn from "../SortableColumn";
+import CreateColumn from "../CreateColumn";
+import CreateTasks from "../CreateTasks";
+import EditProject from "../EditProject";
+import ConfirmDialog from "../ConfirmDialog";
+import Logs from "../Logs";
 
 function TaskManagement() {
   //get user who logged in
@@ -513,7 +513,7 @@ function TaskManagement() {
       <Navbar />
 
       {/* Title */}
-      <div className="task-title relative w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
+      <div className="task-title relative w-full px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-dark)]">
         <h1 className="text-2xl font-bold mb-1">{project?.title || "Unfetched Title"}</h1>
         <p className="text-[var(--text-muted)] max-h-[4.5rem] overflow-y-auto leading-snug">
           {project?.description || "No description provided."}

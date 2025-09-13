@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { useUser } from "./UserContext";  // <-- import
+import { useUser } from "../UserContext";  // <-- import
 
 function Login() {
   const [reminder, setReminder] = useState("");

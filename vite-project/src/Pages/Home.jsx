@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { editIcon, deleteIcon } from "../constVars";
 import axios from "axios";
-import CreateProject from "./CreateProject";
-import ConfirmDialog from "./ConfirmDialog";
-import { useUser } from "./UserContext";
-import Navbar from "./Navbar";
-import EditProject from "./EditProject";
-import { editIcon, deleteIcon } from "./constVars";
+
+import CreateProject from "../CreateProject";
+import ConfirmDialog from "../ConfirmDialog";
+import Navbar from "../Navbar";
+import EditProject from "../EditProject";
+import { useUser } from "../UserContext";
 
 function Home() {
   const { user } = useUser();

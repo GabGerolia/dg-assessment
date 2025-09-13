@@ -1,10 +1,11 @@
 import { Routes, Route } from "react-router-dom";
-import Login from "./Login";
-import Home from "./Home";
-import Signup from "./Signup";
 import { UserProvider } from "./UserContext";
-import TaskManagement from "./TaskManagement";
-import Logs from "./Logs";
+import Login from "./Pages/Login";
+import Home from "./Pages/Home";
+import TaskManagement from "./Pages/TaskManagement";
+import Signup from "./Pages/Signup";
+
+
 
 function App() {
   return (
