@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json());
 
 // CORS
-app.use(cors({ origin: ["http://localhost:5173", "https://dg-assessmentpmt.vercel.app"] }));
+app.use(cors({ origin: ["http://localhost:5173", "https://dg-assessment.vercel.app"] }));
 
 // Database connection
 const db = mysql.createConnection({
