@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 
 // CORS
-app.use(cors({ origin: ["http://localhost:5173", "https://dg-assessment.vercel.app"] }));
+app.use(cors({ origin: ["https://dg-assessment.vercel.app"] }));
 
 // MySQL connection
 const db = mysql.createConnection({
@@ -252,7 +252,7 @@ app.delete("/api/projects/:id", (req, res) => {
 
 
 //localhost:8080 and railway
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 app.get("/projects/:projectId/columns", (req, res) => {
