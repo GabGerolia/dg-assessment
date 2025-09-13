@@ -1,21 +1,33 @@
+require("dotenv").config(); // Load environment variables first
+
 const express = require("express");
 const cors = require("cors");
-const mysql = require("mysql");
-const app = express();
+const mysql = require("mysql2");
 
+const app = express();
 
 // allow JSON in requests
 app.use(express.json());
 
+// CORS (adjust for production frontend later)
 app.use(cors({ origin: ["http://localhost:5173"] }));
 
-// MySQL connection
+// Database connection
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "050503",
-  database: "myDB"
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT
 });
+
+// // MySQL connection for localhost
+// const db = mysql.createConnection({
+//   host: "localhost",
+//   user: "root",
+//   password: "050503",
+//   database: "myDB"
+// });
 
 db.connect((err) => {
   if (err) {
