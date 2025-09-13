@@ -5,7 +5,7 @@ import axios from "axios";
 
 import CreateProject from "../Overlay/CreateProject";
 import ConfirmDialog from "../Overlay/ConfirmDialog";
-import Navbar from "../Navbar";
+import Navbar from "./Navbar";
 import EditProject from "../Overlay/EditProject";
 import { useUser } from "../UserContext";
 

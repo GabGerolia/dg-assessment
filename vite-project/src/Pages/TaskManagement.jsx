@@ -3,10 +3,10 @@ import { DndContext, closestCorners, DragOverlay, } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { useLocation, useParams } from "react-router-dom";
 import { threeDotsIcon, deleteIcon, editIcon } from "../constVars";
-import { useUser } from "../UserContext";
 import axios from "axios";
 
-import Navbar from "../Navbar";
+import Navbar from "./Navbar";
+import { useUser } from "../UserContext";
 import TaskCard from "../TaskCard";
 import SortableColumn from "../SortableColumn";
 import CreateColumn from "../Overlay/CreateColumn";
