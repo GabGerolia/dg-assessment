@@ -9,8 +9,8 @@ const app = express();
 // allow JSON in requests
 app.use(express.json());
 
-// CORS (adjust for production frontend later)
-app.use(cors({ origin: ["http://localhost:5173"] }));
+// CORS
+app.use(cors({ origin: ["http://localhost:5173", "https://dg-assessmentpmt.vercel.app"] }));
 
 // Database connection
 const db = mysql.createConnection({
