@@ -551,7 +551,7 @@ app.put("/tasks/:id", (req, res) => {
           const projectId = rows[0].project_id;
 
           if (userId) {
-            const logMsg = `Updated task "${oldTitle}" → "${title}", description "${oldDesc}" → "${description}", position ${oldPos} → ${position}`;
+            const logMsg = `Updated task "${oldTitle}" → "${title}", description "${oldDesc}" → "${description}"`;
             addLog(projectId, userId, logMsg);
           }
 
