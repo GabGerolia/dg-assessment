@@ -51,7 +51,7 @@ Users can create, edit, move, or delete tasks and columns based on their needs, 
 **Steps!**
 
  1. Download [MySQL](https://www.mysql.com/downloads) and [VS Code.](https://code.visualstudio.com/download) 
- 2. you can use Github Desktop or Git to clone it into VS Code, or download locally the GitHub repository by going [**here.**](https://github.com/GabGerolia/dg-assessment) Select the **localhosting** branch
+ 2. you can use Github Desktop or Git to clone it into VS Code, or download locally the GitHub repository by going (Select the **localhosting** branch) [**here.**](https://github.com/GabGerolia/dg-assessment) 
  3. Import the provided SQL File inside the folder to MySQL Workbench.
  4. after importing, type `use myDB;` to initialize the database.
  5. Open VS Code terminal by going to View > Terminal or by pressing "ctrl + `".
