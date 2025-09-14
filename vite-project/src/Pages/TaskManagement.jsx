@@ -27,7 +27,7 @@ function TaskManagement() {
   const [project, setProject] = useState(null);
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/project/${projectId}`)
+    axios.get(`http://dg-assessment-production.up.railway.app/api/project/${projectId}`)
       .then(res => {
         if (res.data.success) {
           setProject(res.data.project);
@@ -47,7 +47,7 @@ function TaskManagement() {
   //editing project title/description
   const [showEditingProject, setShowEditingProject] = useState(false);
   const handleUpdateProject = (updatedProject) => {
-    axios.put(`http://localhost:8080/api/projects/${project.id}`, {
+    axios.put(`http://dg-assessment-production.up.railway.app/api/projects/${project.id}`, {
       title: updatedProject.title,
       description: updatedProject.description,
       userId: user?.id,
@@ -71,12 +71,12 @@ function TaskManagement() {
   // Load columns and tasks
   useEffect(() => {
     if (!projectId) return;
-    axios.get(`http://localhost:8080/projects/${projectId}/columns`)
+    axios.get(`http://dg-assessment-production.up.railway.app/projects/${projectId}/columns`)
       .then(async (res) => {
         // Fetch tasks for each column
         const colsWithTasks = await Promise.all(
           res.data.map(async (col) => {
-            const tasksRes = await axios.get(`http://localhost:8080/columns/${col.id}/tasks`);
+            const tasksRes = await axios.get(`http://dg-assessment-production.up.railway.app/columns/${col.id}/tasks`);
             return { ...col, tasks: tasksRes.data };
           })
         );
@@ -91,7 +91,7 @@ function TaskManagement() {
   const handleSaveColumn = ({ id, title, color }) => {
     if (id) {
       // update
-      axios.put(`http://localhost:8080/columns/${id}`, { title, color, userId: user?.id, })
+      axios.put(`http://dg-assessment-production.up.railway.app/columns/${id}`, { title, color, userId: user?.id, })
         .then(() => {
           setColumns(prev =>
             prev.map(c => c.id === id ? { ...c, title, color } : c)
@@ -102,7 +102,7 @@ function TaskManagement() {
         .catch(err => console.error("Error updating column:", err));
     } else {
       // create
-      axios.post(`http://localhost:8080/projects/${projectId}/columns`, {
+      axios.post(`http://dg-assessment-production.up.railway.app/projects/${projectId}/columns`, {
         title,
         color,
         position: columns.length,
@@ -119,7 +119,7 @@ function TaskManagement() {
   //When loading columns from DB, each column doesn’t have tasks yet, so make sure they at least have an empty array - gpt
   useEffect(() => {
     if (!projectId) return;
-    axios.get(`http://localhost:8080/projects/${projectId}/columns`)
+    axios.get(`http://dg-assessment-production.up.railway.app/projects/${projectId}/columns`)
       .then(res => {
         const cols = res.data.map(c => ({ ...c, tasks: [] })); // add empty tasks array
         setColumns(cols);
@@ -133,7 +133,7 @@ function TaskManagement() {
   //creation of tasks
   const [showCreateTasks, setShowCreateTasks] = useState(null);
   const handleSaveTask = (colId, { title, description }) => {
-    axios.post(`http://localhost:8080/columns/${colId}/tasks`, {
+    axios.post(`http://dg-assessment-production.up.railway.app/columns/${colId}/tasks`, {
       title,
       description,
       userId: user?.id,
@@ -158,7 +158,7 @@ function TaskManagement() {
 
   // updating task at edit
   const handleUpdateTask = (colId, updatedTask) => {
-    axios.put(`http://localhost:8080/tasks/${updatedTask.id}`, {
+    axios.put(`http://dg-assessment-production.up.railway.app/tasks/${updatedTask.id}`, {
       title: updatedTask.title,
       description: updatedTask.description,
       column_id: colId,
@@ -260,7 +260,7 @@ function TaskManagement() {
         setColumns(reordered);
 
         reordered.forEach((col, idx) => {
-          axios.put(`http://localhost:8080/columns/${col.id}/position`, {
+          axios.put(`http://dg-assessment-production.up.railway.app/columns/${col.id}/position`, {
             position: idx,
           }).catch(err => console.error("Error updating column position:", err));
         });
@@ -305,7 +305,7 @@ function TaskManagement() {
 
           // persist new order
           const orderedTaskIds = destCol.tasks.map((t) => t.id);
-          axios.put(`http://localhost:8080/columns/${destColId}/tasks/reorder`, {
+          axios.put(`http://dg-assessment-production.up.railway.app/columns/${destColId}/tasks/reorder`, {
             orderedTaskIds,
           }).catch(err => console.error("Error saving task order:", err));
         } else {
@@ -323,7 +323,7 @@ function TaskManagement() {
             destCol.tasks.push(movedTask);
           }
 
-          axios.put(`http://localhost:8080/tasks/${movedTask.id}`, {
+          axios.put(`http://dg-assessment-production.up.railway.app/tasks/${movedTask.id}`, {
             title: movedTask.title,
             description: movedTask.description,
             column_id: destColId,
@@ -331,7 +331,7 @@ function TaskManagement() {
 
           // persist new order in destination column
           const orderedTaskIds = destCol.tasks.map((t) => t.id);
-          axios.put(`http://localhost:8080/columns/${destColId}/tasks/reorder`, {
+          axios.put(`http://dg-assessment-production.up.railway.app/columns/${destColId}/tasks/reorder`, {
             orderedTaskIds,
           }).catch(err => console.error("Error saving moved task order:", err));
         }
@@ -345,7 +345,7 @@ function TaskManagement() {
 
   // delete task
   const handleDeleteTask = (colId, taskId) => {
-    axios.delete(`http://localhost:8080/tasks/${taskId}`)
+    axios.delete(`http://dg-assessment-production.up.railway.app/tasks/${taskId}`)
       .then(() => {
         setColumns(prev =>
           prev.map(col =>
@@ -361,7 +361,7 @@ function TaskManagement() {
 
   // delete column
   const handleDeleteColumn = (colId) => {
-    axios.delete(`http://localhost:8080/columns/${colId}`)
+    axios.delete(`http://dg-assessment-production.up.railway.app/columns/${colId}`)
       .then(() => {
         setColumns(prev => prev.filter(c => c.id !== colId));
       })
@@ -384,7 +384,7 @@ function TaskManagement() {
       title: "Delete Task",
       message: "Are you sure you want to delete this task?",
       onConfirm: () => {
-        axios.delete(`http://localhost:8080/tasks/${taskId}`, { data: { userId: user?.id } })
+        axios.delete(`http://dg-assessment-production.up.railway.app/tasks/${taskId}`, { data: { userId: user?.id } })
           .then(() => {
             setColumns(prev =>
               prev.map(col =>
@@ -406,7 +406,7 @@ function TaskManagement() {
       title: "Delete Column",
       message: "Deleting this column will also remove all its tasks. Are you sure?",
       onConfirm: () => {
-        axios.delete(`http://localhost:8080/columns/${colId}`, { data: { userId: user?.id } })
+        axios.delete(`http://dg-assessment-production.up.railway.app/columns/${colId}`, { data: { userId: user?.id } })
           .then(() => {
             setColumns(prev => prev.filter(c => c.id !== colId));
           })
@@ -424,7 +424,7 @@ function TaskManagement() {
 
         // Persist new positions in DB
         reordered.forEach((col, idx) => {
-          axios.put(`http://localhost:8080/columns/${col.id}/position`, {
+          axios.put(`http://dg-assessment-production.up.railway.app/columns/${col.id}/position`, {
             position: idx,
           }).catch(err => console.error("Error updating column position:", err));
         });
@@ -444,7 +444,7 @@ function TaskManagement() {
 
         // Persist new positions in DB
         reordered.forEach((col, idx) => {
-          axios.put(`http://localhost:8080/columns/${col.id}/position`, {
+          axios.put(`http://dg-assessment-production.up.railway.app/columns/${col.id}/position`, {
             position: idx,
           }).catch(err => console.error("Error updating column position:", err));
         });
@@ -483,7 +483,7 @@ function TaskManagement() {
 
       // persist DB: update task with new column + position
       const newPosition = destCol.tasks.length - 1;
-      axios.put(`http://localhost:8080/tasks/${movedTask.id}`, {
+      axios.put(`http://dg-assessment-production.up.railway.app/tasks/${movedTask.id}`, {
         title: movedTask.title,
         description: movedTask.description,
         column_id: targetColId,
@@ -495,11 +495,11 @@ function TaskManagement() {
       const sourceIds = sourceCol.tasks.map((t, i) => t.id);
       const destIds = destCol.tasks.map((t, i) => t.id);
 
-      axios.put(`http://localhost:8080/columns/${sourceCol.id}/tasks/reorder`, {
+      axios.put(`http://dg-assessment-production.up.railway.app/columns/${sourceCol.id}/tasks/reorder`, {
         orderedTaskIds: sourceIds,
       }).catch(err => console.error("Error reordering source column:", err));
 
-      axios.put(`http://localhost:8080/columns/${targetColId}/tasks/reorder`, {
+      axios.put(`http://dg-assessment-production.up.railway.app/columns/${targetColId}/tasks/reorder`, {
         orderedTaskIds: destIds,
       }).catch(err => console.error("Error reordering dest column:", err));
 

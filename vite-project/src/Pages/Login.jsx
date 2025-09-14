@@ -23,7 +23,7 @@ function Login() {
     }
 
     try {
-      const response = await axios.post("http://localhost:8080/api/login", {
+      const response = await axios.post("http://dg-assessment-production.up.railway.app/api/login", {
         username: unameInput,
         password: pwordInput,
       });
