@@ -23,7 +23,7 @@ function Login() {
     }
 
     try {
-      const response = await axios.post("http://dg-assessment-production.up.railway.app/api/login", {
+      const response = await axios.post("https://dg-assessment-production.up.railway.app/api/login", {
         username: unameInput,
         password: pwordInput,
       });

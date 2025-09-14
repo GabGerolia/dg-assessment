@@ -30,7 +30,7 @@ function Signup() {
     }
 
     try {
-      const response = await axios.post("http://dg-assessment-production.up.railway.app/api/signup", {
+      const response = await axios.post("https://dg-assessment-production.up.railway.app/api/signup", {
         username: unameInput,
         password: pwordInput,
       });

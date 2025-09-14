@@ -22,7 +22,7 @@ function Home() {
   useEffect(() => {
     if (user?.id) {
       axios
-        .get(`http://dg-assessment-production.up.railway.app/api/projects/${user.id}`)
+        .get(`https://dg-assessment-production.up.railway.app/api/projects/${user.id}`)
         .then((res) => {
           if (res.data.success) {
             setProjects(res.data.projects);
@@ -36,7 +36,7 @@ function Home() {
   const handleCreateProject = (project) => {
     if (showEditingProject) {
       axios
-        .put(`http://dg-assessment-production.up.railway.app/api/projects/${showEditingProject.id}`, {
+        .put(`https://dg-assessment-production.up.railway.app/api/projects/${showEditingProject.id}`, {
           title: project.title,
           description: project.description,
           userId: user?.id,
@@ -53,7 +53,7 @@ function Home() {
         });
     } else {
       axios
-        .post("http://dg-assessment-production.up.railway.app/api/projects", {
+        .post("https://dg-assessment-production.up.railway.app/api/projects", {
           userId: user.id,
           title: project.title,
           description: project.description,
@@ -84,7 +84,7 @@ function Home() {
 
   const handleDeleteConfirm = () => {
     axios
-      .delete(`http://dg-assessment-production.up.railway.app/api/projects/${projectToDelete}`)
+      .delete(`https://dg-assessment-production.up.railway.app/api/projects/${projectToDelete}`)
       .then((res) => {
         if (res.data.success) {
           setProjects((prev) => prev.filter((p) => p.id !== projectToDelete));
