@@ -9,7 +9,7 @@ function Logs({ projectId, onClose }) {
   const fetchLogs = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:8080/api/logs/${projectId}?sort=${sortOrder}`
+        `https://dg-assessment-production.up.railway.app/api/logs/${projectId}?sort=${sortOrder}`
       );
       setLogs(res.data);
     } catch (err) {
@@ -28,7 +28,7 @@ function Logs({ projectId, onClose }) {
   useEffect(() => {
     if (!projectId) return;
     axios
-      .get(`http://localhost:8080/api/logs/${projectId}?sort=${sortOrder}`)
+      .get(`https://dg-assessment-production.up.railway.app/api/logs/${projectId}?sort=${sortOrder}`)
       .then((res) => setLogs(res.data))
       .catch((err) => console.error("Error fetching logs:", err));
   }, [projectId, sortOrder]);
