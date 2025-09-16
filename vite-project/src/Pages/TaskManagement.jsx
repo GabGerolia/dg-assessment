@@ -343,32 +343,6 @@ function TaskManagement() {
     recalc();
   };
 
-  // delete task
-  const handleDeleteTask = (colId, taskId) => {
-    axios.delete(`http://localhost:8080/tasks/${taskId}`)
-      .then(() => {
-        setColumns(prev =>
-          prev.map(col =>
-            col.id === colId
-              ? { ...col, tasks: col.tasks.filter(t => t.id !== taskId) }
-              : col
-          )
-        );
-      })
-      .catch(err => console.error("Error deleting task:", err));
-  };
-
-
-  // delete column
-  const handleDeleteColumn = (colId) => {
-    axios.delete(`http://localhost:8080/columns/${colId}`)
-      .then(() => {
-        setColumns(prev => prev.filter(c => c.id !== colId));
-      })
-      .catch(err => console.error("Error deleting column:", err));
-  };
-
-
   //confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
