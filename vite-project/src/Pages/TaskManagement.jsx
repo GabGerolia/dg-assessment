@@ -187,7 +187,7 @@ function TaskManagement() {
   const [activeTask, setActiveTask] = useState(null);
   const parentRef = useRef(null);
 
-  // ===== height recalculation logic (your code kept) =====
+  // ===== height recalculation logic =====
   const recalc = () => {
     const parent = parentRef.current;
     if (!parent) return;
@@ -250,7 +250,7 @@ function TaskManagement() {
     const activeType = active.data.current?.type;
     const overType = over.data.current?.type;
 
-    // === Column reordering (unchanged) ===
+    // === Column reordering ===
     if (activeType === "column" && overType === "column") {
       const oldIndex = columns.findIndex((c) => c.id.toString() === active.id);
       const newIndex = columns.findIndex((c) => c.id.toString() === over.id);
