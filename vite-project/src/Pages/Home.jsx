@@ -18,47 +18,50 @@ function Home() {
   const [showEditingProject, setshowEditingProject] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
-  
+
   // Fetch projects on load
   useEffect(() => {
     if (user?.id) {
-      axios
-        _get(`/api/projects/${user.id}`)
-        .then((res) => {
+
+      const fetchData = async () => {
+        try {
+          const res = await _get(`/api/projects/${user.id}`)
+
           if (res.data.success) {
             setProjects(res.data.projects);
           }
-        })
-        .catch((err) => console.error("Error fetching projects:", err));
+        }
+        catch (err) {
+          console.error("Error fetching projects:", err);
+        }
+      }
+      fetchData()
     }
   }, [user]);
 
   // Create or Update
-  const handleCreateProject = (project) => {
+  const handleCreateProject = async (project) => {
     if (showEditingProject) {
-      axios
-        _put(`/api/projects/${showEditingProject.id}`, {
-          title: project.title,
-          description: project.description,
-          userId: user?.id,
-        })
-        .then((res) => {
-          if (res.data.success) {
-            setProjects((prev) =>
-              prev.map((p) =>
-                p.id === showEditingProject.id ? { ...p, ...project } : p
-              )
-            );
-            setshowEditingProject(null);
-          }
-        });
+      const res = await _put(`/api/projects/${showEditingProject.id}`, {
+        title: project.title,
+        description: project.description,
+        userId: user?.id,
+      })
+
+      if (res.data.success) {
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.id === showEditingProject.id ? { ...p, ...project } : p
+          )
+        );
+        setshowEditingProject(null);
+      }
     } else {
-      axios
-        _post("/api/projects", {
-          userId: user.id,
-          title: project.title,
-          description: project.description,
-        })
+      const res = await _post("/api/projects", {
+        userId: user.id,
+        title: project.title,
+        description: project.description,
+      })
         .then((res) => {
           if (res.data.success) {
             setProjects((prev) => [
@@ -85,7 +88,7 @@ function Home() {
 
   const handleDeleteConfirm = () => {
     axios
-      _delete(`/api/projects/${projectToDelete}`)
+    _delete(`/api/projects/${projectToDelete}`)
       .then((res) => {
         if (res.data.success) {
           setProjects((prev) => prev.filter((p) => p.id !== projectToDelete));
@@ -98,7 +101,7 @@ function Home() {
   return (
     <div className="min-h-screen bg-[var(--bg-dark)] text-[var(--text)]">
       {/* Navbar */}
-      <Navbar/>
+      <Navbar />
 
 
       {/* Page content with padding to avoid overlap */}
@@ -133,7 +136,7 @@ function Home() {
           {/* Scrollable Project List */}
           <div className="max-h-[500px] overflow-y-auto space-y-4">
             {projects.map((project, index) => (
-              
+
               // created projects
               <div
                 key={project.id ?? index}
@@ -143,10 +146,10 @@ function Home() {
                 className="relative border border-[var(--border-muted)] rounded-lg p-4 shadow-sm hover:shadow-md transition bg-[var(--bg-light)] text-left group"
               >
                 {/* Action icons */}
-                <div 
+                <div
                   onClick={(e) => e.stopPropagation()}
                   className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition cursor-pointer">
-                  
+
                   {/* Edit */}
                   <button
                     onClick={() => {
