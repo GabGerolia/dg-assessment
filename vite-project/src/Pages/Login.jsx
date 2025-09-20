@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useUser } from "../UserContext";  // <-- import
+import { _get, _post, _put, _delete } from '../../../server/apiClient';
 
 function Login() {
   const [reminder, setReminder] = useState("");
@@ -22,8 +23,12 @@ function Login() {
       return;
     }
 
+    fetchData(unameInput, pwordInput)
+  };
+
+  const fetchData = async (unameInput, pwordInput) => {
     try {
-      const response = await axios.post("http://localhost:8080/api/login", {
+      const response = await _post("/api/login", {
         username: unameInput,
         password: pwordInput,
       });
@@ -44,7 +49,7 @@ function Login() {
       setReminder("Server error.");
     }
   };
- return (
+  return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--bg-dark)] px-4">
       <div className="w-full max-w-md bg-[var(--bg)] text-[var(--text)] rounded-2xl shadow-lg p-8 border border-[var(--border)]">
         <h1 className="text-3xl font-bold text-center mb-6">LOGIN</h1>
