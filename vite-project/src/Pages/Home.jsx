@@ -8,6 +8,7 @@ import ConfirmDialog from "../Overlay/ConfirmDialog";
 import Navbar from "./Navbar";
 import EditProject from "../Overlay/EditProject";
 import { useUser } from "../UserContext";
+import { _get, _post, _put, _delete } from '../../../server/apiClient';
 
 function Home() {
   const { user } = useUser();
@@ -22,7 +23,7 @@ function Home() {
   useEffect(() => {
     if (user?.id) {
       axios
-        .get(`http://localhost:8080/api/projects/${user.id}`)
+        _get(`/api/projects/${user.id}`)
         .then((res) => {
           if (res.data.success) {
             setProjects(res.data.projects);
@@ -36,7 +37,7 @@ function Home() {
   const handleCreateProject = (project) => {
     if (showEditingProject) {
       axios
-        .put(`http://localhost:8080/api/projects/${showEditingProject.id}`, {
+        _put(`/api/projects/${showEditingProject.id}`, {
           title: project.title,
           description: project.description,
           userId: user?.id,
@@ -53,7 +54,7 @@ function Home() {
         });
     } else {
       axios
-        .post("http://localhost:8080/api/projects", {
+        _post("/api/projects", {
           userId: user.id,
           title: project.title,
           description: project.description,
@@ -84,7 +85,7 @@ function Home() {
 
   const handleDeleteConfirm = () => {
     axios
-      .delete(`http://localhost:8080/api/projects/${projectToDelete}`)
+      _delete(`/api/projects/${projectToDelete}`)
       .then((res) => {
         if (res.data.success) {
           setProjects((prev) => prev.filter((p) => p.id !== projectToDelete));
