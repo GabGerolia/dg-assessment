@@ -3,11 +3,15 @@ const cors = require("cors");
 const mysql = require("mysql");
 const app = express();
 
-
 // allow JSON in requests
 app.use(express.json());
 
 app.use(cors({ origin: ["http://localhost:5173"] }));
+
+//localhost:8080
+app.listen(8080, () => {
+  console.log("Server started on port 8080");
+});
 
 // MySQL connection
 const db = mysql.createConnection({
@@ -52,8 +56,6 @@ app.get("/api/project/:id", (req, res) => {
     res.json({ success: true, project: results[0] });
   });
 });
-
-
 
 //fetch login info
 app.post("/api/login", (req, res) => {
@@ -127,6 +129,8 @@ app.post("/api/signup", (req, res) => {
   });
 });
 
+//=== PROJECT ===
+
 // Create project
 app.post("/api/projects", (req, res) => {
   const { userId, title, description } = req.body;
@@ -176,7 +180,6 @@ app.post("/api/projects", (req, res) => {
     });
   });
 });
-
 
 // Get projects by user
 app.get("/api/projects/:userId", (req, res) => {
@@ -231,7 +234,6 @@ app.put("/api/projects/:id", (req, res) => {
   });
 });
 
-
 // Delete project
 app.delete("/api/projects/:id", (req, res) => {
   const { id } = req.params;
@@ -245,12 +247,8 @@ app.delete("/api/projects/:id", (req, res) => {
   });
 });
 
-
-//localhost:8080
-app.listen(8080, () => {
-  console.log("Server started on port 8080");
-});
-
+//=== COLUMNS ===
+//load columns
 app.get("/projects/:projectId/columns", (req, res) => {
   const { projectId } = req.params;
   db.query(
@@ -266,8 +264,6 @@ app.get("/projects/:projectId/columns", (req, res) => {
   );
 });
 
-
-//=== COLUMNS ===
 
 // Create a new column for a project
 app.post("/projects/:projectId/columns", (req, res) => {
@@ -484,7 +480,6 @@ app.post("/columns/:columnId/tasks", (req, res) => {
   });
 });
 
-
 // Bulk update task positions in a column / update task positions after drag-and-drop:
 app.put("/columns/:columnId/tasks/reorder", (req, res) => {
   const { columnId } = req.params;
@@ -515,7 +510,6 @@ app.put("/columns/:columnId/tasks/reorder", (req, res) => {
       res.status(500).json({ success: false });
     });
 });
-
 
 // Update task
 app.put("/tasks/:id", (req, res) => {
@@ -561,7 +555,6 @@ app.put("/tasks/:id", (req, res) => {
     );
   });
 });
-
 
 // Delete task
 app.delete("/tasks/:id", (req, res) => {
