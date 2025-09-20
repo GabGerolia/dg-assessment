@@ -39,15 +39,29 @@ function TaskManagement() {
   const [activeTask, setActiveTask] = useState(null);
   const parentRef = useRef(null);
 
+  //creation of tasks
+  const [showCreateTasks, setShowCreateTasks] = useState(null);
+
   const [project, setProject] = useState(null);
+
+  //editing project title/description
+  const [showEditingProject, setShowEditingProject] = useState(false);
+
   useEffect(() => {
-    _get(`/api/project/${projectId}`)
-      .then(res => {
+    const fetchProject = async () => {
+      try {
+        const res = await _get(`/api/project/${projectId}`);
         if (res.data.success) {
           setProject(res.data.project);
         }
-      })
-      .catch(err => console.error("Error fetching project:", err));
+      } catch (err) {
+        console.error("Error fetching project:", err);
+      }
+    };
+
+    if (projectId) {
+      fetchProject()
+    };
   }, [projectId]);
 
 
@@ -58,33 +72,29 @@ function TaskManagement() {
     return col.tasks.findIndex((t) => t.id === taskId);
   };
 
-  //editing project title/description
-  const [showEditingProject, setShowEditingProject] = useState(false);
-  const handleUpdateProject = (updatedProject) => {
-    _put(`/api/projects/${project.id}`, {
+  //updating project
+  const handleUpdateProject = async (updatedProject) => {
+    const res = await _put(`/api/projects/${project.id}`, {
       title: updatedProject.title,
       description: updatedProject.description,
       userId: user?.id,
     })
-      .then((res) => {
-        if (res.data.success) {
-          // update local state immediately
-          setProject((prev) => ({
-            ...prev,
-            title: updatedProject.title,
-            description: updatedProject.description,
-          }));
-          setShowEditingProject(false);
-        }
-      });
+    if (res.data.success) {
+      // update local state immediately
+      setProject((prev) => ({
+        ...prev,
+        title: updatedProject.title,
+        description: updatedProject.description,
+      }));
+      setShowEditingProject(false);
+    }
   };
 
   // Load columns and tasks
   useEffect(() => {
-    if (!projectId) return;
-    _get(`/projects/${projectId}/columns`)
-      .then(async (res) => {
-        // Fetch tasks for each column
+    const fetchColumnsAndTasks = async () => {
+      try {
+        const res = await _get(`/projects/${projectId}/columns`);
         const colsWithTasks = await Promise.all(
           res.data.map(async (col) => {
             const tasksRes = await _get(`/columns/${col.id}/tasks`);
@@ -92,101 +102,97 @@ function TaskManagement() {
           })
         );
         setColumns(colsWithTasks);
-      })
-      .catch(err => console.error("Error fetching columns:", err));
+      } catch (err) {
+        console.error("Error fetching columns:", err);
+      }
+    };
+
+    if (projectId) fetchColumnsAndTasks();
   }, [projectId]);
 
-  const handleSaveColumn = ({ id, title, color }) => {
+
+  const handleSaveColumn = async ({ id, title, color }) => {
     if (id) {
       // update
-      _put(`/columns/${id}`, { title, color, userId: user?.id, })
-        .then(() => {
-          setColumns(prev =>
-            prev.map(c => c.id === id ? { ...c, title, color } : c)
-          );
-          setEditingColumn(null);
-          setShowCreateColumn(false);
-        })
-        .catch(err => console.error("Error updating column:", err));
+      try {
+        const res = await _put(`/columns/${id}`, { title, color, userId: user?.id, })
+
+        setColumns(prev =>
+          prev.map(c => c.id === id ? { ...c, title, color } : c)
+        );
+        setEditingColumn(null);
+        setShowCreateColumn(false);
+      } catch (err) {
+        console.error("Error updating column:", err);
+      }
     } else {
       // create
-      _post(`/projects/${projectId}/columns`, {
-        title,
-        color,
-        position: columns.length,
-        userId: user?.id,
-      })
-        .then(res => {
-          setColumns(prev => [...prev, { ...res.data, tasks: [] }]); // always include empty tasks
-          setShowCreateColumn(false);
+      try {
+        const res = await _post(`/projects/${projectId}/columns`, {
+          title,
+          color,
+          position: columns.length,
+          userId: user?.id,
         })
-        .catch(err => console.error("Error saving column:", err));
+        setColumns(prev => [...prev, { ...res.data, tasks: [] }]); // always include empty tasks
+        setShowCreateColumn(false);
+      } catch (err) {
+        console.error("Error saving column:", err);
+      }
     }
   };
 
-  //When loading columns from DB, each column doesn’t have tasks yet, so make sure they at least have an empty array - gpt
-  useEffect(() => {
-    if (!projectId) return;
-    _get(`/projects/${projectId}/columns`)
-      .then(res => {
-        const cols = res.data.map(c => ({ ...c, tasks: [] })); // add empty tasks array
-        setColumns(cols);
-      })
-      .catch(err => console.error("Error fetching columns:", err));
-  }, [projectId]);
+  //saving task
+  const handleSaveTask = async (colId, { title, description }) => {
+    try {
+      const res = await _post(`/columns/${colId}/tasks`, {
+        title,
+        description,
+        userId: user?.id,
+      });
 
-
-  //creation of tasks
-  const [showCreateTasks, setShowCreateTasks] = useState(null);
-  const handleSaveTask = (colId, { title, description }) => {
-    _post(`/columns/${colId}/tasks`, {
-      title,
-      description,
-      userId: user?.id,
-    })
-      .then(res => {
-        setColumns(prev =>
-          prev.map(col =>
-            col.id === colId
-              ? {
-                ...col,
-                tasks: [...col.tasks, res.data].sort(
-                  (a, b) => a.position - b.position
-                ),
-              }
-              : col
-          )
-        );
-        setShowCreateTasks(null);
-      })
-      .catch(err => console.error("Error saving task:", err));
+      setColumns(prev =>
+        prev.map(col =>
+          col.id === colId
+            ? { ...col, tasks: [...col.tasks, res.data].sort((a, b) => a.position - b.position) }
+            : col
+        )
+      );
+      setShowCreateTasks(null);
+    } catch (err) {
+      console.err("Error saving task:", err);
+    }
   };
 
   // updating task at edit
-  const handleUpdateTask = (colId, updatedTask) => {
-    _put(`/tasks/${updatedTask.id}`, {
-      title: updatedTask.title,
-      description: updatedTask.description,
-      column_id: colId,
-      userId: user?.id,
-    })
-      .then(() => {
-        setColumns(prev =>
-          prev.map(col =>
-            col.id === colId
-              ? {
-                ...col,
-                tasks: col.tasks.map(t =>
-                  t.id === updatedTask.id ? { ...t, ...updatedTask } : t
-                ),
-              }
-              : col
-          )
-        );
-        setEditingTask(null);
-        setEditingTaskColId(null);
-      })
-      .catch(err => console.error("Error updating task:", err));
+  const handleUpdateTask = async (colId, updatedTask) => {
+    try {
+      await _put(`/tasks/${updatedTask.id}`, {
+        title: updatedTask.title,
+        description: updatedTask.description,
+        column_id: colId,
+        userId: user?.id,
+      });
+
+      // update state immediately after success
+      setColumns(prev =>
+        prev.map(col =>
+          col.id === colId
+            ? {
+              ...col,
+              tasks: col.tasks.map(t =>
+                t.id === updatedTask.id ? { ...t, ...updatedTask } : t
+              ),
+            }
+            : col
+        )
+      );
+
+      setEditingTask(null);
+      setEditingTaskColId(null);
+    } catch (err) {
+      console.error("Error updating task:", err);
+    }
   };
 
   // ===== height recalculation logic =====
@@ -245,7 +251,7 @@ function TaskManagement() {
     }
   };
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = async (event) => {
     const { active, over } = event;
     if (!over) return;
 
@@ -261,11 +267,14 @@ function TaskManagement() {
         const reordered = arrayMove(columns, oldIndex, newIndex);
         setColumns(reordered);
 
-        reordered.forEach((col, idx) => {
-          _put(`/columns/${col.id}/position`, {
-            position: idx,
-          }).catch(err => console.error("Error updating column position:", err));
-        });
+        try {
+          // update all positions sequentially
+          for (const [idx, col] of reordered.entries()) {
+            await _put(`/columns/${col.id}/position`, { position: idx });
+          }
+        } catch (err) {
+          console.error("Error updating column position:", err);
+        }
       }
       return;
     }
@@ -288,59 +297,68 @@ function TaskManagement() {
         return;
       }
 
-      setColumns((prev) => {
-        const newCols = prev.map((c) => ({ ...c, tasks: [...c.tasks] }));
-        const sourceCol = newCols.find((c) => String(c.id) === String(sourceColId));
-        const destCol = newCols.find((c) => String(c.id) === String(destColId));
-        if (!sourceCol || !destCol) return prev;
+      // local vars to use after updating state
+      let movedTask = null;
+      let newCols = columns.map((c) => ({ ...c, tasks: [...c.tasks] }));
 
-        const oldIndex = sourceCol.tasks.findIndex((t) => t.id === active.id);
+      const sourceCol = newCols.find((c) => String(c.id) === String(sourceColId));
+      const destCol = newCols.find((c) => String(c.id) === String(destColId));
+      if (!sourceCol || !destCol) return;
 
-        let movedTask = null;
+      const oldIndex = sourceCol.tasks.findIndex((t) => t.id === active.id);
 
-        if (sourceColId === destColId) {
-          // Reorder inside same column
-          const newIndex = destCol.tasks.findIndex((t) => t.id === over.id);
-          if (oldIndex !== -1 && newIndex !== -1) {
-            destCol.tasks = arrayMove(destCol.tasks, oldIndex, newIndex);
-          }
+      if (sourceColId === destColId) {
+        // Reorder inside same column
+        const newIndex = destCol.tasks.findIndex((t) => t.id === over.id);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          destCol.tasks = arrayMove(destCol.tasks, oldIndex, newIndex);
+        }
 
-          // persist new order
-          const orderedTaskIds = destCol.tasks.map((t) => t.id);
-          _put(`/columns/${destColId}/tasks/reorder`, {
-            orderedTaskIds,
-          }).catch(err => console.error("Error saving task order:", err));
+        setColumns(newCols);
+
+        // persist new order
+        const orderedTaskIds = destCol.tasks.map((t) => t.id);
+        try {
+          await _put(`/columns/${destColId}/tasks/reorder`, { orderedTaskIds });
+        } catch (err) {
+          console.error("Error saving task order:", err);
+        }
+      } else {
+        // Move between columns
+        [movedTask] = sourceCol.tasks.splice(oldIndex, 1);
+
+        const newIndex =
+          over.data.current?.type === "task"
+            ? destCol.tasks.findIndex((t) => t.id === over.id)
+            : destCol.tasks.length;
+
+        if (newIndex >= 0) {
+          destCol.tasks.splice(newIndex, 0, movedTask);
         } else {
-          // Move between columns
-          [movedTask] = sourceCol.tasks.splice(oldIndex, 1);
+          destCol.tasks.push(movedTask);
+        }
 
-          const newIndex =
-            over.data.current?.type === "task"
-              ? destCol.tasks.findIndex((t) => t.id === over.id)
-              : destCol.tasks.length;
+        setColumns(newCols);
 
-          if (newIndex >= 0) {
-            destCol.tasks.splice(newIndex, 0, movedTask);
-          } else {
-            destCol.tasks.push(movedTask);
-          }
-
-          _put(`/tasks/${movedTask.id}`, {
+        try {
+          await _put(`/tasks/${movedTask.id}`, {
             title: movedTask.title,
             description: movedTask.description,
             column_id: destColId,
             position: newIndex >= 0 ? newIndex : destCol.tasks.length - 1,
-            userId: user?.id,
-          }).catch(err => console.error("Error updating task column:", err));
-
-          // persist new order in destination column
-          const orderedTaskIds = destCol.tasks.map((t) => t.id);
-          _put(`/columns/${destColId}/tasks/reorder`, {
-            orderedTaskIds,
-          }).catch(err => console.error("Error saving moved task order:", err));
+          });
+        } catch (err) {
+          console.error("Error updating task column:", err);
         }
-        return newCols;
-      });
+
+        // persist new order in destination column
+        try {
+          const orderedTaskIds = destCol.tasks.map((t) => t.id);
+          await _put(`/columns/${destColId}/tasks/reorder`, { orderedTaskIds });
+        } catch (err) {
+          console.error("Error saving moved task order:", err);
+        }
+      }
     }
 
     setActiveTask(null);
@@ -361,18 +379,20 @@ function TaskManagement() {
       isOpen: true,
       title: "Delete Task",
       message: "Are you sure you want to delete this task?",
-      onConfirm: () => {
-        _delete(`/tasks/${taskId}`, { data: { userId: user?.id } })
-          .then(() => {
-            setColumns(prev =>
-              prev.map(col =>
-                col.id === colId
-                  ? { ...col, tasks: col.tasks.filter(t => t.id !== taskId) }
-                  : col
-              )
-            );
-          })
-          .catch(err => console.error("Error deleting task:", err));
+      onConfirm: async () => {
+        try {
+          await _delete(`/tasks/${taskId}`, { data: { userId: user?.id } })
+
+          setColumns(prev =>
+            prev.map(col =>
+              col.id === colId
+                ? { ...col, tasks: col.tasks.filter(t => t.id !== taskId) }
+                : col
+            )
+          );
+        } catch (err) {
+          console.error("Error deleting task:", err);
+        }
       },
     });
   };
@@ -383,55 +403,52 @@ function TaskManagement() {
       isOpen: true,
       title: "Delete Column",
       message: "Deleting this column will also remove all its tasks. Are you sure?",
-      onConfirm: () => {
-        _delete(`/columns/${colId}`, { data: { userId: user?.id } })
-          .then(() => {
-            setColumns(prev => prev.filter(c => c.id !== colId));
-          })
-          .catch(err => console.error("Error deleting column:", err));
+      onConfirm: async () => {
+        try {
+          await _delete(`/columns/${colId}`, { data: { userId: user?.id } })
+          setColumns(prev => prev.filter(c => c.id !== colId));
+        } catch (err) {
+          console.error("Error deleting column:", err);
+        }
       },
     });
   };
 
   // Move column left
-  const handleMoveLeft = (colId) => {
-    setColumns((prev) => {
-      const index = prev.findIndex((c) => c.id === colId);
-      if (index > 0) {
-        const reordered = arrayMove(prev, index, index - 1);
+  const handleMoveLeft = async (colId) => {
+    const index = columns.findIndex((c) => c.id === colId);
+    if (index > 0) {
+      const reordered = arrayMove(columns, index, index - 1);
+      setColumns(reordered);
 
-        // Persist new positions in DB
-        reordered.forEach((col, idx) => {
-          _put(`/columns/${col.id}/position`, {
-            position: idx,
-          }).catch(err => console.error("Error updating column position:", err));
-        });
-
-        return reordered;
+      try {
+        for (const [idx, col] of reordered.entries()) {
+          await _put(`/columns/${col.id}/position`, { position: idx });
+        }
+      } catch (err) {
+        console.error("Error updating column position:", err);
       }
-      return prev;
-    });
+    }
   };
 
   // Move column right
-  const handleMoveRight = (colId) => {
-    setColumns((prev) => {
-      const index = prev.findIndex((c) => c.id === colId);
-      if (index !== -1 && index < prev.length - 1) {
-        const reordered = arrayMove(prev, index, index + 1);
+  const handleMoveRight = async (colId) => {
+    const index = columns.findIndex((c) => c.id === colId);
+    if (index !== -1 && index < columns.length - 1) {
+      const reordered = arrayMove(columns, index, index + 1);
+      setColumns(reordered);
 
-        // Persist new positions in DB
-        reordered.forEach((col, idx) => {
-          _put(`/columns/${col.id}/position`, {
-            position: idx,
-          }).catch(err => console.error("Error updating column position:", err));
-        });
-
-        return reordered;
+      // Persist new positions in DB
+      try {
+        for (const [idx, col] of reordered.entries()) {
+          await _put(`/columns/${col.id}/position`, { position: idx });
+        }
+      } catch (err) {
+        console.error("Error updating column position:", err);
       }
-      return prev;
-    });
+    }
   };
+
 
   //to open the edit task modal
   const requestEditTask = (colId, taskId) => {
@@ -443,47 +460,53 @@ function TaskManagement() {
     setEditingTaskColId(colId);
   };
 
-  const handleMoveTask = (taskId, targetColId) => {
+  const handleMoveTask = async (taskId, targetColId) => {
+    // local vars to use after state update
+    let movedTask, sourceCol, destCol, newPosition, sourceIds, destIds;
+
     setColumns((prev) => {
       const newCols = prev.map((c) => ({ ...c, tasks: [...c.tasks] }));
 
-      const sourceCol = newCols.find((c) => (c.tasks || []).some((t) => t.id === taskId));
-      const destCol = newCols.find((c) => String(c.id) === String(targetColId));
+      sourceCol = newCols.find((c) => (c.tasks || []).some((t) => t.id === taskId));
+      destCol = newCols.find((c) => String(c.id) === String(targetColId));
       if (!sourceCol || !destCol) return prev;
 
       const taskIndex = sourceCol.tasks.findIndex((t) => t.id === taskId);
       if (taskIndex === -1) return prev;
-      const [movedTask] = sourceCol.tasks.splice(taskIndex, 1);
+
+      [movedTask] = sourceCol.tasks.splice(taskIndex, 1);
 
       // add to destination at end
       destCol.tasks.push(movedTask);
 
       // persist DB: update task with new column + position
-      const newPosition = destCol.tasks.length - 1;
-      _put(`/tasks/${movedTask.id}`, {
-        title: movedTask.title,
-        description: movedTask.description,
-        column_id: targetColId,
-        position: newPosition,   // send position!
-        userId: user?.id,
-      }).catch(err => console.error("Error moving task:", err));
+      newPosition = destCol.tasks.length - 1;
 
       // re-save positions of both columns
-      const sourceIds = sourceCol.tasks.map((t, i) => t.id);
-      const destIds = destCol.tasks.map((t, i) => t.id);
-
-      _put(`/columns/${sourceCol.id}/tasks/reorder`, {
-        orderedTaskIds: sourceIds,
-      }).catch(err => console.error("Error reordering source column:", err));
-
-      _put(`/columns/${targetColId}/tasks/reorder`, {
-        orderedTaskIds: destIds,
-      }).catch(err => console.error("Error reordering dest column:", err));
+      sourceIds = sourceCol.tasks.map((t) => t.id);
+      destIds = destCol.tasks.map((t) => t.id);
 
       return newCols;
     });
-  };
 
+    try {
+      await _put(`/tasks/${movedTask.id}`, {
+        title: movedTask.title,
+        description: movedTask.description,
+        column_id: targetColId,
+        position: newPosition,
+        userId: user?.id,
+      });
+      await _put(`/columns/${sourceCol.id}/tasks/reorder`, {
+        orderedTaskIds: sourceIds,
+      });
+      await _put(`/columns/${targetColId}/tasks/reorder`, {
+        orderedTaskIds: destIds,
+      });
+    } catch (err) {
+      console.error("Error reordering dest column:", err);
+    }
+  };
 
   return (
     <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">

@@ -6,7 +6,7 @@ import { _get, _post, _put, _delete } from '../../../server/apiClient';
 function Signup() {
   const [reminder, setReminder] = useState("");
   const navigate = useNavigate();
-  
+
   const handleSignupClick = async () => {
     const uname = document.querySelector(".user");
     const pword = document.querySelector(".pw");
