@@ -14,6 +14,7 @@ import CreateTasks from "../Overlay/CreateTasks";
 import EditProject from "../Overlay/EditProject";
 import ConfirmDialog from "../Overlay/ConfirmDialog";
 import Logs from "../Overlay/Logs";
+import { _get, _post, _put, _delete } from '../../../server/apiClient';
 
 function TaskManagement() {
   //get user who logged in
@@ -22,12 +23,25 @@ function TaskManagement() {
   //state for logs modal
   const [showLogs, setShowLogs] = useState(false);
 
+  // columns from DB
+  const [columns, setColumns] = useState([]);
+
   //fetch project title and description 
   const { projectId } = useParams(); // comes from /TaskManagement/:projectId
-  const [project, setProject] = useState(null);
+  const [showCreateColumn, setShowCreateColumn] = useState(false); //creation of columns
+  const [editingColumn, setEditingColumn] = useState(null); //editing of columns
 
+  //task edit
+  const [editingTask, setEditingTask] = useState(null); // task object when editing
+  const [editingTaskColId, setEditingTaskColId] = useState(null); // column id of task being edited
+
+  // currently dragged task
+  const [activeTask, setActiveTask] = useState(null);
+  const parentRef = useRef(null);
+
+  const [project, setProject] = useState(null);
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/project/${projectId}`)
+    _get(`/api/project/${projectId}`)
       .then(res => {
         if (res.data.success) {
           setProject(res.data.project);
@@ -47,7 +61,7 @@ function TaskManagement() {
   //editing project title/description
   const [showEditingProject, setShowEditingProject] = useState(false);
   const handleUpdateProject = (updatedProject) => {
-    axios.put(`http://localhost:8080/api/projects/${project.id}`, {
+    _put(`/api/projects/${project.id}`, {
       title: updatedProject.title,
       description: updatedProject.description,
       userId: user?.id,
@@ -65,18 +79,15 @@ function TaskManagement() {
       });
   };
 
-  // columns from DB
-  const [columns, setColumns] = useState([]);
-
   // Load columns and tasks
   useEffect(() => {
     if (!projectId) return;
-    axios.get(`http://localhost:8080/projects/${projectId}/columns`)
+    _get(`/projects/${projectId}/columns`)
       .then(async (res) => {
         // Fetch tasks for each column
         const colsWithTasks = await Promise.all(
           res.data.map(async (col) => {
-            const tasksRes = await axios.get(`http://localhost:8080/columns/${col.id}/tasks`);
+            const tasksRes = await _get(`/columns/${col.id}/tasks`);
             return { ...col, tasks: tasksRes.data };
           })
         );
@@ -85,13 +96,10 @@ function TaskManagement() {
       .catch(err => console.error("Error fetching columns:", err));
   }, [projectId]);
 
-  const [showCreateColumn, setShowCreateColumn] = useState(false); //creation of columns
-  const [editingColumn, setEditingColumn] = useState(null); //editing of columns
-
   const handleSaveColumn = ({ id, title, color }) => {
     if (id) {
       // update
-      axios.put(`http://localhost:8080/columns/${id}`, { title, color, userId: user?.id, })
+      _put(`/columns/${id}`, { title, color, userId: user?.id, })
         .then(() => {
           setColumns(prev =>
             prev.map(c => c.id === id ? { ...c, title, color } : c)
@@ -102,7 +110,7 @@ function TaskManagement() {
         .catch(err => console.error("Error updating column:", err));
     } else {
       // create
-      axios.post(`http://localhost:8080/projects/${projectId}/columns`, {
+      _post(`/projects/${projectId}/columns`, {
         title,
         color,
         position: columns.length,
@@ -119,7 +127,7 @@ function TaskManagement() {
   //When loading columns from DB, each column doesn’t have tasks yet, so make sure they at least have an empty array - gpt
   useEffect(() => {
     if (!projectId) return;
-    axios.get(`http://localhost:8080/projects/${projectId}/columns`)
+    _get(`/projects/${projectId}/columns`)
       .then(res => {
         const cols = res.data.map(c => ({ ...c, tasks: [] })); // add empty tasks array
         setColumns(cols);
@@ -127,13 +135,11 @@ function TaskManagement() {
       .catch(err => console.error("Error fetching columns:", err));
   }, [projectId]);
 
-  const [editingTask, setEditingTask] = useState(null); // task object when editing
-  const [editingTaskColId, setEditingTaskColId] = useState(null); // column id of task being edited
 
   //creation of tasks
   const [showCreateTasks, setShowCreateTasks] = useState(null);
   const handleSaveTask = (colId, { title, description }) => {
-    axios.post(`http://localhost:8080/columns/${colId}/tasks`, {
+    _post(`/columns/${colId}/tasks`, {
       title,
       description,
       userId: user?.id,
@@ -158,7 +164,7 @@ function TaskManagement() {
 
   // updating task at edit
   const handleUpdateTask = (colId, updatedTask) => {
-    axios.put(`http://localhost:8080/tasks/${updatedTask.id}`, {
+    _put(`/tasks/${updatedTask.id}`, {
       title: updatedTask.title,
       description: updatedTask.description,
       column_id: colId,
@@ -183,11 +189,7 @@ function TaskManagement() {
       .catch(err => console.error("Error updating task:", err));
   };
 
-  // currently dragged task
-  const [activeTask, setActiveTask] = useState(null);
-  const parentRef = useRef(null);
-
-  // ===== height recalculation logic (your code kept) =====
+  // ===== height recalculation logic =====
   const recalc = () => {
     const parent = parentRef.current;
     if (!parent) return;
@@ -250,7 +252,7 @@ function TaskManagement() {
     const activeType = active.data.current?.type;
     const overType = over.data.current?.type;
 
-    // === Column reordering (unchanged) ===
+    // === Column reordering ===
     if (activeType === "column" && overType === "column") {
       const oldIndex = columns.findIndex((c) => c.id.toString() === active.id);
       const newIndex = columns.findIndex((c) => c.id.toString() === over.id);
@@ -260,7 +262,7 @@ function TaskManagement() {
         setColumns(reordered);
 
         reordered.forEach((col, idx) => {
-          axios.put(`http://localhost:8080/columns/${col.id}/position`, {
+          _put(`/columns/${col.id}/position`, {
             position: idx,
           }).catch(err => console.error("Error updating column position:", err));
         });
@@ -305,7 +307,7 @@ function TaskManagement() {
 
           // persist new order
           const orderedTaskIds = destCol.tasks.map((t) => t.id);
-          axios.put(`http://localhost:8080/columns/${destColId}/tasks/reorder`, {
+          _put(`/columns/${destColId}/tasks/reorder`, {
             orderedTaskIds,
           }).catch(err => console.error("Error saving task order:", err));
         } else {
@@ -323,15 +325,17 @@ function TaskManagement() {
             destCol.tasks.push(movedTask);
           }
 
-          axios.put(`http://localhost:8080/tasks/${movedTask.id}`, {
+          _put(`/tasks/${movedTask.id}`, {
             title: movedTask.title,
             description: movedTask.description,
             column_id: destColId,
+            position: newIndex >= 0 ? newIndex : destCol.tasks.length - 1,
+            userId: user?.id,
           }).catch(err => console.error("Error updating task column:", err));
 
           // persist new order in destination column
           const orderedTaskIds = destCol.tasks.map((t) => t.id);
-          axios.put(`http://localhost:8080/columns/${destColId}/tasks/reorder`, {
+          _put(`/columns/${destColId}/tasks/reorder`, {
             orderedTaskIds,
           }).catch(err => console.error("Error saving moved task order:", err));
         }
@@ -358,7 +362,7 @@ function TaskManagement() {
       title: "Delete Task",
       message: "Are you sure you want to delete this task?",
       onConfirm: () => {
-        axios.delete(`http://localhost:8080/tasks/${taskId}`, { data: { userId: user?.id } })
+        _delete(`/tasks/${taskId}`, { data: { userId: user?.id } })
           .then(() => {
             setColumns(prev =>
               prev.map(col =>
@@ -380,7 +384,7 @@ function TaskManagement() {
       title: "Delete Column",
       message: "Deleting this column will also remove all its tasks. Are you sure?",
       onConfirm: () => {
-        axios.delete(`http://localhost:8080/columns/${colId}`, { data: { userId: user?.id } })
+        _delete(`/columns/${colId}`, { data: { userId: user?.id } })
           .then(() => {
             setColumns(prev => prev.filter(c => c.id !== colId));
           })
@@ -398,7 +402,7 @@ function TaskManagement() {
 
         // Persist new positions in DB
         reordered.forEach((col, idx) => {
-          axios.put(`http://localhost:8080/columns/${col.id}/position`, {
+          _put(`/columns/${col.id}/position`, {
             position: idx,
           }).catch(err => console.error("Error updating column position:", err));
         });
@@ -418,7 +422,7 @@ function TaskManagement() {
 
         // Persist new positions in DB
         reordered.forEach((col, idx) => {
-          axios.put(`http://localhost:8080/columns/${col.id}/position`, {
+          _put(`/columns/${col.id}/position`, {
             position: idx,
           }).catch(err => console.error("Error updating column position:", err));
         });
@@ -428,7 +432,6 @@ function TaskManagement() {
       return prev;
     });
   };
-
 
   //to open the edit task modal
   const requestEditTask = (colId, taskId) => {
@@ -457,7 +460,7 @@ function TaskManagement() {
 
       // persist DB: update task with new column + position
       const newPosition = destCol.tasks.length - 1;
-      axios.put(`http://localhost:8080/tasks/${movedTask.id}`, {
+      _put(`/tasks/${movedTask.id}`, {
         title: movedTask.title,
         description: movedTask.description,
         column_id: targetColId,
@@ -469,11 +472,11 @@ function TaskManagement() {
       const sourceIds = sourceCol.tasks.map((t, i) => t.id);
       const destIds = destCol.tasks.map((t, i) => t.id);
 
-      axios.put(`http://localhost:8080/columns/${sourceCol.id}/tasks/reorder`, {
+      _put(`/columns/${sourceCol.id}/tasks/reorder`, {
         orderedTaskIds: sourceIds,
       }).catch(err => console.error("Error reordering source column:", err));
 
-      axios.put(`http://localhost:8080/columns/${targetColId}/tasks/reorder`, {
+      _put(`/columns/${targetColId}/tasks/reorder`, {
         orderedTaskIds: destIds,
       }).catch(err => console.error("Error reordering dest column:", err));
 
