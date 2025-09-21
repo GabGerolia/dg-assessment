@@ -2,6 +2,23 @@ const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql");
 const app = express();
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET = process.env.JWT_SECRET || "secretKeyExample";
+
+//Middleware to Verify Token
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1]; // Expect "Bearer <token>"
+
+  if (!token) return res.status(401).json({ error: "No token provided" });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: "Invalid token" });
+    req.user = user; // attach decoded user info
+    next();
+  });
+}
 
 // allow JSON in requests
 app.use(express.json());
@@ -42,7 +59,7 @@ function addLog(projectId, userId, description) {
 }
 
 // Get a single project by ID
-app.get("/api/project/:id", (req, res) => {
+app.get("/api/project/:id", authenticateToken, (req, res) => {
   const { id } = req.params;
   const sql = "SELECT * FROM projects WHERE id = ?";
   db.query(sql, [id], (err, results) => {
@@ -61,10 +78,8 @@ app.get("/api/project/:id", (req, res) => {
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
 
-  if (!username) {
-    return res.status(400).json({ error: "Username is required" });
-  } else if (!password) {
-    return res.status(400).json({ error: "Password is required" });
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username and password are required" });
   }
 
   db.query(
@@ -77,22 +92,28 @@ app.post("/api/login", (req, res) => {
       }
 
       if (results.length > 0) {
+        const user = {
+          id: results[0].id,
+          username: results[0].userName,
+        };
+
+        // Generate JWT
+        const token = jwt.sign(user, JWT_SECRET, { expiresIn: "1h" });
+
         res.json({
           success: true,
           message: "Login successful",
-          user: {
-            id: results[0].id,
-            username: results[0].userName
-          }
+          token,  // send token to frontend
+          // user,
         });
-      }
-      else {
-        // username not found
-        res.json({ success: false, message: "Invalid username" });
+
+      } else {
+        res.json({ success: false, message: "Invalid username or password" });
       }
     }
   );
 });
+
 
 // signup
 app.post("/api/signup", (req, res) => {
@@ -182,7 +203,7 @@ app.post("/api/projects", (req, res) => {
 });
 
 // Get projects by user
-app.get("/api/projects/:userId", (req, res) => {
+app.get("/api/projects/:userId", authenticateToken, (req, res) => {
   const { userId } = req.params;
   const sql = "SELECT * FROM projects WHERE user_id = ?";
   db.query(sql, [userId], (err, results) => {
@@ -249,7 +270,7 @@ app.delete("/api/projects/:id", (req, res) => {
 
 //=== COLUMNS ===
 //load columns
-app.get("/projects/:projectId/columns", (req, res) => {
+app.get("/projects/:projectId/columns",authenticateToken,  (req, res) => {
   const { projectId } = req.params;
   db.query(
     "SELECT * FROM columns WHERE project_id = ? ORDER BY position ASC",
@@ -408,7 +429,7 @@ app.delete("/columns/:id", (req, res) => {
 // === TASKS ===
 
 // Get tasks for a column
-app.get("/columns/:columnId/tasks", (req, res) => {
+app.get("/columns/:columnId/tasks", authenticateToken,  (req, res) => {
   const { columnId } = req.params;
   db.query(
     "SELECT * FROM tasks WHERE column_id = ? ORDER BY position ASC",
@@ -605,7 +626,7 @@ app.delete("/tasks/:id", (req, res) => {
 
 
 // Fetch logs for a specific project
-app.get("/api/logs/:projectId", (req, res) => {
+app.get("/api/logs/:projectId", authenticateToken, (req, res) => {
   const { projectId } = req.params;
   const { sort = "desc" } = req.query; // optional sort param
 

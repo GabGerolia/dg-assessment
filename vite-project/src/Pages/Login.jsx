@@ -36,6 +36,9 @@ function Login() {
       if (response.data.success) {
         setReminder("Login success!");
 
+        // save JWT token in localStorage
+        localStorage.setItem("token", response.data.token);
+
         // save user globally
         setUser(response.data.user);
 
