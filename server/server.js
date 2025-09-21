@@ -103,8 +103,8 @@ app.post("/api/login", (req, res) => {
         res.json({
           success: true,
           message: "Login successful",
-          token,  // send token to frontend
-          // user,
+          token, 
+          user,
         });
 
       } else {
@@ -114,6 +114,11 @@ app.post("/api/login", (req, res) => {
   );
 });
 
+// Get current logged in user
+app.get("/api/me", authenticateToken, (req, res) => {
+  const { id, username } = req.user;
+  res.json({ user: { id, username } });
+});
 
 // signup
 app.post("/api/signup", (req, res) => {
