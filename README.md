@@ -102,7 +102,3 @@ Users can create, edit, move, or delete tasks and columns based on their needs, 
     
     -   There is no functionality for users to reset forgotten passwords or recover accounts.
         
--   **Transport Security Depends on Deployment**
-    
-    -   The server itself is configured to run on plain HTTP.        
-    -   Railway and Vercel provide HTTPS at the domain level, but if the app is run locally without HTTPS, credentials are transmitted unencrypted.
