@@ -1,6 +1,3 @@
-if (process.env.NODE_ENV !== "production") {
-  require("dotenv").config();
-}
 
 const express = require("express");
 const cors = require("cors");
@@ -14,6 +11,9 @@ app.use(express.json());
 // CORS
 app.use(cors({ origin: ["https://dg-assessment.vercel.app", "http://localhost:5173"] }));
 
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
 // MySQL connection
 const db = mysql.createConnection({
