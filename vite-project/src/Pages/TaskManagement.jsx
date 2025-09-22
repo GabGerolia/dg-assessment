@@ -14,6 +14,7 @@ import CreateTasks from "../Overlay/CreateTasks";
 import EditProject from "../Overlay/EditProject";
 import ConfirmDialog from "../Overlay/ConfirmDialog";
 import Logs from "../Overlay/Logs";
+import { _get, _post, _put, _delete } from '../../../server/apiClient';
 
 function TaskManagement() {
   //get user who logged in
@@ -22,9 +23,29 @@ function TaskManagement() {
   //state for logs modal
   const [showLogs, setShowLogs] = useState(false);
 
+  // columns from DB
+  const [columns, setColumns] = useState([]);
+
   //fetch project title and description 
   const { projectId } = useParams(); // comes from /TaskManagement/:projectId
+  const [showCreateColumn, setShowCreateColumn] = useState(false); //creation of columns
+  const [editingColumn, setEditingColumn] = useState(null); //editing of columns
+
+  //task edit
+  const [editingTask, setEditingTask] = useState(null); // task object when editing
+  const [editingTaskColId, setEditingTaskColId] = useState(null); // column id of task being edited
+
+  // currently dragged task
+  const [activeTask, setActiveTask] = useState(null);
+  const parentRef = useRef(null);
+
+  //creation of tasks
+  const [showCreateTasks, setShowCreateTasks] = useState(null);
+
   const [project, setProject] = useState(null);
+
+  //editing project title/description
+  const [showEditingProject, setShowEditingProject] = useState(false);
 
   useEffect(() => {
     axios.get(`https://dg-assessment-production.up.railway.app/api/project/${projectId}`)
@@ -32,8 +53,14 @@ function TaskManagement() {
         if (res.data.success) {
           setProject(res.data.project);
         }
-      })
-      .catch(err => console.error("Error fetching project:", err));
+      } catch (err) {
+        console.error("Error fetching project:", err);
+      }
+    };
+
+    if (projectId) {
+      fetchProject()
+    };
   }, [projectId]);
 
 
@@ -52,21 +79,16 @@ function TaskManagement() {
       description: updatedProject.description,
       userId: user?.id,
     })
-      .then((res) => {
-        if (res.data.success) {
-          // update local state immediately
-          setProject((prev) => ({
-            ...prev,
-            title: updatedProject.title,
-            description: updatedProject.description,
-          }));
-          setShowEditingProject(false);
-        }
-      });
+    if (res.data.success) {
+      // update local state immediately
+      setProject((prev) => ({
+        ...prev,
+        title: updatedProject.title,
+        description: updatedProject.description,
+      }));
+      setShowEditingProject(false);
+    }
   };
-
-  // columns from DB
-  const [columns, setColumns] = useState([]);
 
   // Load columns and tasks
   useEffect(() => {
@@ -81,14 +103,16 @@ function TaskManagement() {
           })
         );
         setColumns(colsWithTasks);
-      })
-      .catch(err => console.error("Error fetching columns:", err));
+      } catch (err) {
+        console.error("Error fetching columns:", err);
+      }
+    };
+
+    if (projectId) fetchColumnsAndTasks();
   }, [projectId]);
 
-  const [showCreateColumn, setShowCreateColumn] = useState(false); //creation of columns
-  const [editingColumn, setEditingColumn] = useState(null); //editing of columns
 
-  const handleSaveColumn = ({ id, title, color }) => {
+  const handleSaveColumn = async ({ id, title, color }) => {
     if (id) {
       // update
       axios.put(`https://dg-assessment-production.up.railway.app/columns/${id}`, { title, color, userId: user?.id, })
@@ -188,6 +212,7 @@ function TaskManagement() {
   const parentRef = useRef(null);
 
   // ===== height recalculation logic =====
+  // ===== height recalculation logic =====
   const recalc = () => {
     const parent = parentRef.current;
     if (!parent) return;
@@ -243,13 +268,14 @@ function TaskManagement() {
     }
   };
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = async (event) => {
     const { active, over } = event;
     if (!over) return;
 
     const activeType = active.data.current?.type;
     const overType = over.data.current?.type;
 
+    // === Column reordering ===
     // === Column reordering ===
     if (activeType === "column" && overType === "column") {
       const oldIndex = columns.findIndex((c) => c.id.toString() === active.id);
@@ -286,22 +312,24 @@ function TaskManagement() {
         return;
       }
 
-      setColumns((prev) => {
-        const newCols = prev.map((c) => ({ ...c, tasks: [...c.tasks] }));
-        const sourceCol = newCols.find((c) => String(c.id) === String(sourceColId));
-        const destCol = newCols.find((c) => String(c.id) === String(destColId));
-        if (!sourceCol || !destCol) return prev;
+      // local vars to use after updating state
+      let movedTask = null;
+      let newCols = columns.map((c) => ({ ...c, tasks: [...c.tasks] }));
 
-        const oldIndex = sourceCol.tasks.findIndex((t) => t.id === active.id);
+      const sourceCol = newCols.find((c) => String(c.id) === String(sourceColId));
+      const destCol = newCols.find((c) => String(c.id) === String(destColId));
+      if (!sourceCol || !destCol) return;
 
-        let movedTask = null;
+      const oldIndex = sourceCol.tasks.findIndex((t) => t.id === active.id);
 
-        if (sourceColId === destColId) {
-          // Reorder inside same column
-          const newIndex = destCol.tasks.findIndex((t) => t.id === over.id);
-          if (oldIndex !== -1 && newIndex !== -1) {
-            destCol.tasks = arrayMove(destCol.tasks, oldIndex, newIndex);
-          }
+      if (sourceColId === destColId) {
+        // Reorder inside same column
+        const newIndex = destCol.tasks.findIndex((t) => t.id === over.id);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          destCol.tasks = arrayMove(destCol.tasks, oldIndex, newIndex);
+        }
+
+        setColumns(newCols);
 
           // persist new order
           const orderedTaskIds = destCol.tasks.map((t) => t.id);
@@ -312,31 +340,35 @@ function TaskManagement() {
           // Move between columns
           [movedTask] = sourceCol.tasks.splice(oldIndex, 1);
 
-          const newIndex =
-            over.data.current?.type === "task"
-              ? destCol.tasks.findIndex((t) => t.id === over.id)
-              : destCol.tasks.length;
+        const newIndex =
+          over.data.current?.type === "task"
+            ? destCol.tasks.findIndex((t) => t.id === over.id)
+            : destCol.tasks.length;
 
-          if (newIndex >= 0) {
-            destCol.tasks.splice(newIndex, 0, movedTask);
-          } else {
-            destCol.tasks.push(movedTask);
-          }
+        if (newIndex >= 0) {
+          destCol.tasks.splice(newIndex, 0, movedTask);
+        } else {
+          destCol.tasks.push(movedTask);
+        }
 
           axios.put(`https://dg-assessment-production.up.railway.app/tasks/${movedTask.id}`, {
             title: movedTask.title,
             description: movedTask.description,
             column_id: destColId,
-          }).catch(err => console.error("Error updating task column:", err));
+            position: newIndex >= 0 ? newIndex : destCol.tasks.length - 1,
+          });
+        } catch (err) {
+          console.error("Error updating task column:", err);
+        }
 
-          // persist new order in destination column
+        // persist new order in destination column
+        try {
           const orderedTaskIds = destCol.tasks.map((t) => t.id);
           axios.put(`https://dg-assessment-production.up.railway.app/columns/${destColId}/tasks/reorder`, {
             orderedTaskIds,
           }).catch(err => console.error("Error saving moved task order:", err));
         }
-        return newCols;
-      });
+      }
     }
 
     setActiveTask(null);
@@ -410,11 +442,11 @@ function TaskManagement() {
   };
 
   // Move column right
-  const handleMoveRight = (colId) => {
-    setColumns((prev) => {
-      const index = prev.findIndex((c) => c.id === colId);
-      if (index !== -1 && index < prev.length - 1) {
-        const reordered = arrayMove(prev, index, index + 1);
+  const handleMoveRight = async (colId) => {
+    const index = columns.findIndex((c) => c.id === colId);
+    if (index !== -1 && index < columns.length - 1) {
+      const reordered = arrayMove(columns, index, index + 1);
+      setColumns(reordered);
 
         // Persist new positions in DB
         reordered.forEach((col, idx) => {
@@ -440,17 +472,21 @@ function TaskManagement() {
     setEditingTaskColId(colId);
   };
 
-  const handleMoveTask = (taskId, targetColId) => {
+  const handleMoveTask = async (taskId, targetColId) => {
+    // local vars to use after state update
+    let movedTask, sourceCol, destCol, newPosition, sourceIds, destIds;
+
     setColumns((prev) => {
       const newCols = prev.map((c) => ({ ...c, tasks: [...c.tasks] }));
 
-      const sourceCol = newCols.find((c) => (c.tasks || []).some((t) => t.id === taskId));
-      const destCol = newCols.find((c) => String(c.id) === String(targetColId));
+      sourceCol = newCols.find((c) => (c.tasks || []).some((t) => t.id === taskId));
+      destCol = newCols.find((c) => String(c.id) === String(targetColId));
       if (!sourceCol || !destCol) return prev;
 
       const taskIndex = sourceCol.tasks.findIndex((t) => t.id === taskId);
       if (taskIndex === -1) return prev;
-      const [movedTask] = sourceCol.tasks.splice(taskIndex, 1);
+
+      [movedTask] = sourceCol.tasks.splice(taskIndex, 1);
 
       // add to destination at end
       destCol.tasks.push(movedTask);
@@ -461,7 +497,7 @@ function TaskManagement() {
         title: movedTask.title,
         description: movedTask.description,
         column_id: targetColId,
-        position: newPosition,   // send position!
+        position: newPosition,
         userId: user?.id,
       }).catch(err => console.error("Error moving task:", err));
 
@@ -475,12 +511,11 @@ function TaskManagement() {
 
       axios.put(`https://dg-assessment-production.up.railway.app/columns/${targetColId}/tasks/reorder`, {
         orderedTaskIds: destIds,
-      }).catch(err => console.error("Error reordering dest column:", err));
-
-      return newCols;
-    });
+      });
+    } catch (err) {
+      console.error("Error reordering dest column:", err);
+    }
   };
-
 
   return (
     <div className="task-container min-h-screen flex flex-col bg-[var(--bg-dark)] text-[var(--text)]">

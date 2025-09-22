@@ -8,6 +8,7 @@ import ConfirmDialog from "../Overlay/ConfirmDialog";
 import Navbar from "./Navbar";
 import EditProject from "../Overlay/EditProject";
 import { useUser } from "../UserContext";
+import { _get, _post, _put, _delete } from '../../../server/apiClient';
 
 function Home() {
   const { user } = useUser();
@@ -17,7 +18,7 @@ function Home() {
   const [showEditingProject, setshowEditingProject] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
-  
+
   // Fetch projects on load
   useEffect(() => {
     if (user?.id) {
@@ -27,13 +28,17 @@ function Home() {
           if (res.data.success) {
             setProjects(res.data.projects);
           }
-        })
-        .catch((err) => console.error("Error fetching projects:", err));
+        }
+        catch (err) {
+          console.error("Error fetching projects:", err);
+        }
+      }
+      fetchData()
     }
   }, [user]);
 
   // Create or Update
-  const handleCreateProject = (project) => {
+  const handleCreateProject = async (project) => {
     if (showEditingProject) {
       axios
         .put(`https://dg-assessment-production.up.railway.app/api/projects/${showEditingProject.id}`, {
@@ -97,7 +102,7 @@ function Home() {
   return (
     <div className="min-h-screen bg-[var(--bg-dark)] text-[var(--text)]">
       {/* Navbar */}
-      <Navbar/>
+      <Navbar />
 
 
       {/* Page content with padding to avoid overlap */}
@@ -132,7 +137,7 @@ function Home() {
           {/* Scrollable Project List */}
           <div className="max-h-[500px] overflow-y-auto space-y-4">
             {projects.map((project, index) => (
-              
+
               // created projects
               <div
                 key={project.id ?? index}
@@ -142,10 +147,10 @@ function Home() {
                 className="relative border border-[var(--border-muted)] rounded-lg p-4 shadow-sm hover:shadow-md transition bg-[var(--bg-light)] text-left group"
               >
                 {/* Action icons */}
-                <div 
+                <div
                   onClick={(e) => e.stopPropagation()}
                   className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition cursor-pointer">
-                  
+
                   {/* Edit */}
                   <button
                     onClick={() => {

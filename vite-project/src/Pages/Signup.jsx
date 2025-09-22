@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { _get, _post, _put, _delete } from '../../../server/apiClient';
 
 function Signup() {
   const [reminder, setReminder] = useState("");
@@ -28,7 +29,10 @@ function Signup() {
       setReminder("Passwords do not match.");
       return;
     }
+    fetchData(unameInput, pwordInput);
+  };
 
+  const fetchData = async (unameInput, pwordInput) => {
     try {
       const response = await axios.post("https://dg-assessment-production.up.railway.app/api/signup", {
         username: unameInput,
@@ -46,7 +50,6 @@ function Signup() {
       setReminder("Server error. Please try again.");
     }
   };
-
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--bg-dark)] px-4">

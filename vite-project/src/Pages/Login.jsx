@@ -22,6 +22,10 @@ function Login() {
       return;
     }
 
+    fetchData(unameInput, pwordInput)
+  };
+
+  const fetchData = async (unameInput, pwordInput) => {
     try {
       const response = await axios.post("https://dg-assessment-production.up.railway.app/api/login", {
         username: unameInput,
@@ -30,6 +34,9 @@ function Login() {
 
       if (response.data.success) {
         setReminder("Login success!");
+
+        // save JWT token in localStorage
+        localStorage.setItem("token", response.data.token);
 
         // save user globally
         setUser(response.data.user);
@@ -44,7 +51,7 @@ function Login() {
       setReminder("Server error.");
     }
   };
- return (
+  return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--bg-dark)] px-4">
       <div className="w-full max-w-md bg-[var(--bg)] text-[var(--text)] rounded-2xl shadow-lg p-8 border border-[var(--border)]">
         <h1 className="text-3xl font-bold text-center mb-6">LOGIN</h1>

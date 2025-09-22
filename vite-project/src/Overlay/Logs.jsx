@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { exitIcon, ascendingIcon, descendingIcon } from "../constVars";
+import { _get, _post, _put, _delete } from '../../../server/apiClient';
 
 function Logs({ projectId, onClose }) {
   const [sortOrder, setSortOrder] = useState("desc");
@@ -32,6 +33,7 @@ function Logs({ projectId, onClose }) {
       .then((res) => setLogs(res.data))
       .catch((err) => console.error("Error fetching logs:", err));
   }, [projectId, sortOrder]);
+
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -78,9 +80,9 @@ function Logs({ projectId, onClose }) {
               <div
                 key={log.id}
                 className="p-3 rounded-lg bg-[var(--bg-light)] border border-[var(--border-muted)]"
-              > 
+              >
                 <p className="text-sm truncate" title={log.description}>
-                  {/* User <span className="font-semibold">{log.userName}</span>  */} 
+                  {/* User <span className="font-semibold">{log.userName}</span>  */}
                   {log.description}
                 </p>
                 <p className="text-xs text-[var(--text-muted)]">
