@@ -15,7 +15,7 @@ app.use(cors({ origin: ["http://localhost:5173"] }));
 // routes
 app.use("/api", authRoutes);
 app.use("/api", projectRoutes);
-app.use("/", columnRoutes);  // notice you had `/projects/...`
+app.use("/", columnRoutes); 
 app.use("/", taskRoutes);
 app.use("/api", logRoutes);
 
