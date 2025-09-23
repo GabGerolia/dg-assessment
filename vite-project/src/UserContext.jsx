@@ -12,7 +12,7 @@ export function UserProvider({ children }) {
 
     if (token) {
       // Try to validate the token and fetch user info
-      axios.get(`${import.meta.env.VITE_BASE_URL}/api/me`, {
+      axios.get(`${import.meta.env.VITE_BASE_URL}/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => {
