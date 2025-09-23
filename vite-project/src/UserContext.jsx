@@ -13,7 +13,7 @@ export function UserProvider({ children }) {
     if (token) {
       // Try to validate the token and fetch user info
       axios
-        .get("http://localhost:8080/api/me", {
+        .get("https://dg-assessment.vercel.app/api/me", {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => {
