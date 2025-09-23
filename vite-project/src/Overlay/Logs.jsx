@@ -9,8 +9,8 @@ function Logs({ projectId, onClose }) {
 
   const fetchLogs = async () => {
     try {
-      const res = await axios.get(
-        `https://dg-assessment-production.up.railway.app/api/logs/${projectId}?sort=${sortOrder}`
+      const res = await _get(
+        `/api/logs/${projectId}?sort=${sortOrder}`
       );
       setLogs(res.data);
     } catch (err) {
@@ -28,10 +28,17 @@ function Logs({ projectId, onClose }) {
 
   useEffect(() => {
     if (!projectId) return;
-    axios
-      .get(`https://dg-assessment-production.up.railway.app/api/logs/${projectId}?sort=${sortOrder}`)
-      .then((res) => setLogs(res.data))
-      .catch((err) => console.error("Error fetching logs:", err));
+
+    const fetchLogs = async () => {
+      try {
+        const res = await _get(`/api/logs/${projectId}?sort=${sortOrder}`);
+        setLogs(res.data);
+      } catch (err) {
+        console.error("Error fetching logs:", err);
+      }
+    };
+
+    fetchLogs();
   }, [projectId, sortOrder]);
 
 

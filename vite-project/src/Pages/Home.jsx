@@ -22,9 +22,11 @@ function Home() {
   // Fetch projects on load
   useEffect(() => {
     if (user?.id) {
-      axios
-        .get(`https://dg-assessment-production.up.railway.app/api/projects/${user.id}`)
-        .then((res) => {
+
+      const fetchData = async () => {
+        try {
+          const res = await _get(`/api/projects/${user.id}`)
+
           if (res.data.success) {
             setProjects(res.data.projects);
           }
@@ -40,29 +42,26 @@ function Home() {
   // Create or Update
   const handleCreateProject = async (project) => {
     if (showEditingProject) {
-      axios
-        .put(`https://dg-assessment-production.up.railway.app/api/projects/${showEditingProject.id}`, {
-          title: project.title,
-          description: project.description,
-          userId: user?.id,
-        })
-        .then((res) => {
-          if (res.data.success) {
-            setProjects((prev) =>
-              prev.map((p) =>
-                p.id === showEditingProject.id ? { ...p, ...project } : p
-              )
-            );
-            setshowEditingProject(null);
-          }
-        });
+      const res = await _put(`/api/projects/${showEditingProject.id}`, {
+        title: project.title,
+        description: project.description,
+        userId: user?.id,
+      })
+
+      if (res.data.success) {
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.id === showEditingProject.id ? { ...p, ...project } : p
+          )
+        );
+        setshowEditingProject(null);
+      }
     } else {
-      axios
-        .post("https://dg-assessment-production.up.railway.app/api/projects", {
-          userId: user.id,
-          title: project.title,
-          description: project.description,
-        })
+      const res = await _post("/api/projects", {
+        userId: user.id,
+        title: project.title,
+        description: project.description,
+      })
         .then((res) => {
           if (res.data.success) {
             setProjects((prev) => [
@@ -89,7 +88,7 @@ function Home() {
 
   const handleDeleteConfirm = () => {
     axios
-      .delete(`https://dg-assessment-production.up.railway.app/api/projects/${projectToDelete}`)
+    _delete(`/api/projects/${projectToDelete}`)
       .then((res) => {
         if (res.data.success) {
           setProjects((prev) => prev.filter((p) => p.id !== projectToDelete));

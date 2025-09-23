@@ -34,7 +34,7 @@ function Signup() {
 
   const fetchData = async (unameInput, pwordInput) => {
     try {
-      const response = await axios.post("https://dg-assessment-production.up.railway.app/api/signup", {
+      const response = await _post('/api/signup', {
         username: unameInput,
         password: pwordInput,
       });
