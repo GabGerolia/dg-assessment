@@ -1,6 +1,5 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios";
-import { _get, _post, _put, _delete } from '../../../server/apiClient';
 
 const UserContext = createContext();
 
@@ -9,28 +8,28 @@ export function UserProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await _get("/me"); 
-        setUser(res.data.user);
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
-        localStorage.removeItem("token");
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
+    if (token) {
+      // Try to validate the token and fetch user info
+      axios
+        .get("http://localhost:8080/api/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          setUser(res.data.user); // backend should return user info
+        })
+        .catch(() => {
+          // invalid token or expired
+          localStorage.removeItem("token");
+          setUser(null);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
   }, []);
+
   return (
     <UserContext.Provider value={{ user, setUser, loading }}>
       {children}

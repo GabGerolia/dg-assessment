@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { useUser } from "../UserContext"; 
+import { useUser } from "../UserContext";  // <-- import
 import { _get, _post, _put, _delete } from '../../../server/apiClient';
 
 function Login() {
   const [reminder, setReminder] = useState("");
   const navigate = useNavigate();
-  const { setUser } = useUser();  // <-- get setter from UserContext
+  const { setUser } = useUser();  // <-- get setter from context
 
   const handleLoginClick = async () => {
     const uname = document.querySelector(".user");
