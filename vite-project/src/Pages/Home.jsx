@@ -8,7 +8,7 @@ import ConfirmDialog from "../Overlay/ConfirmDialog";
 import Navbar from "./Navbar";
 import EditProject from "../Overlay/EditProject";
 import { useUser } from "../UserContext";
-import { _get, _post, _put, _delete } from '../../../server/apiClient';
+import { _get, _post, _put, _delete } from '../utils/apiClient';
 
 function Home() {
   const { user } = useUser();

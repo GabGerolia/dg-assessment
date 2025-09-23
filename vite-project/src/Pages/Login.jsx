@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useUser } from "../UserContext";  // <-- import
-import { _get, _post, _put, _delete } from '../../../server/apiClient';
+import { _get, _post, _put, _delete } from '../utils/apiClient';
 
 function Login() {
   const [reminder, setReminder] = useState("");

@@ -14,7 +14,7 @@ import CreateTasks from "../Overlay/CreateTasks";
 import EditProject from "../Overlay/EditProject";
 import ConfirmDialog from "../Overlay/ConfirmDialog";
 import Logs from "../Overlay/Logs";
-import { _get, _post, _put, _delete } from '../../../server/apiClient';
+import { _get, _post, _put, _delete } from '../utils/apiClient';
 
 function TaskManagement() {
   //get user who logged in
