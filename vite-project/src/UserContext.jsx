@@ -4,7 +4,7 @@ import axios from "axios";
 const UserContext = createContext();
 
 export function UserProvider({ children }) {
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -12,10 +12,9 @@ export function UserProvider({ children }) {
 
     if (token) {
       // Try to validate the token and fetch user info
-      axios
-        .get("https://dg-assessment.vercel.app/api/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+      axios.get(`${import.meta.env.VITE_BASE_URL}/api/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
         .then((res) => {
           setUser(res.data.user); // backend should return user info
         })
