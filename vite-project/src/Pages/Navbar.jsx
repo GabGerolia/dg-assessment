@@ -17,7 +17,7 @@ function Navbar() {
   useEffect(() => {
     document.body.classList.remove("light", "dark");
     document.body.classList.add(theme);
-    localStorage.setItem("theme", theme);
+    localStorage.setItem("theme", theme); 
   }, [theme]);
 
   const toggleTheme = () => {
@@ -29,8 +29,8 @@ function Navbar() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
     setUser(null);
+    localStorage.removeItem("user");
     navigate("/");
   };
 

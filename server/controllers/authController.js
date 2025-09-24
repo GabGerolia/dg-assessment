@@ -41,14 +41,13 @@ exports.login = (req, res) => {
       // Generate JWT
       const token = jwt.sign(user, JWT_SECRET, { expiresIn: "1h" });
 
-      res.json({
-        success: true,
-        message: "Login successful",
-        token,
-        user,
-      });
-    }
-  );
+    res.json({
+      success: true,
+      message: "Login successful",
+      token,
+      user,
+    });
+  });
 };
 
 // signup
