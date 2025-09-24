@@ -1,7 +1,20 @@
 
+
 # Developer Assessment Task - Full Stack 
 #### by: John Gabriel Gerolia 
 A technical assessment given to me on Sep 03, 2025 with a 14days deadline. I finished the task around Sep 13, 2025. and integrated the frontend to *Vercel* and backend to *Railway* at Sep 14, 2025.
+
+At Sep 18, 2025 I was instructed to improve the readability and structure of the code and try to minimize the incomplete functionalities of the software. I was given 10 days to finish the task. I finished the task at Sep 24, 2025.
+
+**What are the new things added?**
+
+ - Backend now follows the **MVC Architecture** (inside the `server` folder).
+ - It now hashing passwords using *bcryptjs*.
+ - Implemented *JWT-based authentication*, enabling secure login sessions and route protection.
+ - Replaced callback chaining with *async/await* for cleaner and more maintainable code.
+ - Centralized API for Backend and Frontend.
+ - Improved readability and maintainability by following coding standards.
+ - Now used docker to containerized the backend for easier deployment.
 
 In this Assessment I was provided an instruction which stacks to use for the development of the project **(Project Management Tool)**.
 
@@ -40,16 +53,25 @@ Users can create, edit, move, or delete tasks and columns based on their needs, 
  - Railway
 ****
 ### Files inside explained
- - **Index.css** - Contains the theme of Light/Dark mode
- - **App.jsx** - Contains the route of Pages
- - Files inside **Overlay folder** are Overlay popups to notify and help user managing projects and tasks
- - File inside **Pages folder** are Main pages used in this project
+**BACKEND** (server)
+ - **config** Folder - has `db.js` file that handles database connection.
+ - **controllers** Folder - contains files that handle application logic (processing requests, calling models, returning responses).
+ - **middleware** Folder - contains functions like token verification for user authentication/authorization.
+ - **models** Folder - contains files that handle database interactions and queries.
+ - **routes** Folder - contains files to define API endpoints and connect them to the appropriate controllers.
+ - **apiClient.js** - centralized API client used for the backend.
+ - **server.js** - entry point of the backend; sets up middleware, routes, and serves the frontend in production.
+
+**FRONTEND** (vite-project)
+ -  **Overlay** Folder - contains files that handles overlay popups to notify and help user managing projects and tasks
+ - **Pages** Folder - contains files that are Main pages used in this project
+ - **apiClient.js** - centralized API client used for the frontend.
+  - **App.jsx** - Contains the route of Pages
  - **ConstVars.jsx** - contains preset colors for column and SVG Icons used.
  - **SortableColumn.jsx** - A wrapper to make columns Sortable
- - **TaskColumn.jsx & TaskCard.jsx** - Components for Tasks and Columns used in TaskManagement.jsx
+ - **TaskColumn.jsx & TaskCard.jsx** - Components used for Tasks and Columns in `TaskManagement.jsx`
  - **UserContext.jsx** - To identify which user is logged in even when the browser is refreshed.
- - **Server.js** is the main backend file that defines the Express server, API endpoints, and database connections for the application.
-
+ - **Index.css** - Contains the theme of Light/Dark mode
 
 
 # Instructions to run the project locally.
@@ -75,30 +97,6 @@ Users can create, edit, move, or delete tasks and columns based on their needs, 
 
 # Any incomplete functionality or known issues, with an explanation.
 
- **Security Concerns**
- 
-
--   **Plaintext Password Storage**
+**No Password Reset or Account Recovery**
     
-    -   User passwords are still stored directly in the database without hashing or salting.
-    -   If the database is leaked, all accounts are immediately compromised.
-        
--   **No Authentication Tokens or Sessions**
-    
-    -   After login, the server responds with user data but does not issue a secure session or JWT token.        
-    -   This means there is no persistent way to verify or protect user identity across multiple requests.
-        
--   **Weak Input Validation and Sanitization**
-    
-    -   Input fields such as `username`, `password`, `title`, and `description` are validated for presence but not sanitized.        
-    -   Although parameterized queries are used, lack of full sanitization and strict validation could expose the system to injection or malformed data issues.
-        
--   **Limited Authorization Checks**
-    
-    -   The server verifies data ownership only partially (for example, some routes fetch `userId` for logging but do not enforce strict access control).        
-    -   Users may potentially access or modify data belonging to others if endpoints are abused.
-        
--   **No Password Reset or Account Recovery**
-    
-    -   There is no functionality for users to reset forgotten passwords or recover accounts.
-        
+   -  There is no functionality for users to reset forgotten passwords or recover accounts.
