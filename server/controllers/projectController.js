@@ -1,5 +1,5 @@
-const db = require("../config/db");
 const { addLog } = require("../models/logModel");
+const Project = require("../models/projectModel");
 
 // Create project
 exports.createProject = (req, res) => {
@@ -9,8 +9,7 @@ exports.createProject = (req, res) => {
     return res.status(400).json({ success: false, message: "Missing fields" });
   }
 
-  const sql = "INSERT INTO projects (user_id, title, description, created_at) VALUES (?, ?, ?, NOW())";
-  db.query(sql, [userId, title, description], (err, result) => {
+  Project.createProject(userId, title, description, (err, result) => {
     if (err) {
       console.error("Error inserting project:", err);
       return res.status(500).json({ success: false, error: "Database error" });
@@ -18,44 +17,36 @@ exports.createProject = (req, res) => {
 
     const projectId = result.insertId;
 
-    // Insert preset columns 
-    //change colors here if main colors was change
-    const presetColumns = [
+    // Preset columns
+    const presetColumns = [ //change colors here.
       { title: "Todo", color: "hsl(350, 63%, 40%)", position: 0 },
       { title: "In Progress", color: "hsl(25 45% 40%)", position: 1 },
       { title: "Done", color: "hsl(140 35% 40%)", position: 2 },
     ];
 
-    const columnSql = "INSERT INTO columns (project_id, title, color, position) VALUES ?";
-    const columnValues = presetColumns.map(c => [projectId, c.title, c.color, c.position]);
-
-    db.query(columnSql, [columnValues], (colErr, colResult) => {
+    Project.insertColumns(projectId, presetColumns, (colErr, colResult) => {
       if (colErr) {
         console.error("Error inserting columns:", colErr);
         return res.status(500).json({ success: false, error: "Database error" });
       }
 
-      const todoColumnId = colResult.insertId; // ID of "Todo" column (first inserted)
+      const todoColumnId = colResult.insertId; // first inserted column ("Todo")
 
-      // Insert default sample task into Todo
-      const taskSql = "INSERT INTO tasks (column_id, title, description, created_at, position) VALUES (?, ?, ?, NOW(), 0)";
-      db.query(taskSql, [todoColumnId, "Sample Title", "Sample Description"], (taskErr) => {
+      Project.insertDefaultTask(todoColumnId, (taskErr) => {
         if (taskErr) {
           console.error("Error inserting sample task:", taskErr);
           return res.status(500).json({ success: false, error: "Database error" });
         }
-
         res.json({ success: true, id: projectId });
       });
     });
   });
 };
 
-// Get projects by user at home
+// Get projects by user
 exports.getProject = (req, res) => {
   const { userId } = req.params;
-  const sql = "SELECT * FROM projects WHERE user_id = ?";
-  db.query(sql, [userId], (err, results) => {
+  Project.getProjectsByUserId(userId, (err, results) => {
     if (err) {
       console.error("Error fetching projects:", err);
       return res.status(500).json({ success: false, error: "Database error" });
@@ -64,11 +55,10 @@ exports.getProject = (req, res) => {
   });
 };
 
-//get project details after clicking on project
+// Get project by id
 exports.getProjectById = (req, res) => {
   const { id } = req.params;
-  const sql = "SELECT * FROM projects WHERE id = ?";
-  db.query(sql, [id], (err, results) => {
+  Project.getProjectById(id, (err, results) => {
     if (err) {
       console.error("Error fetching project:", err);
       return res.status(500).json({ success: false, error: "Database error" });
@@ -80,15 +70,12 @@ exports.getProjectById = (req, res) => {
   });
 };
 
-
 // Update project
 exports.updateProject = (req, res) => {
   const { id } = req.params;
   const { title, description, userId } = req.body;
 
-  // First get the current values
-  const getSql = "SELECT title, description FROM projects WHERE id = ?";
-  db.query(getSql, [id], (getErr, rows) => {
+  Project.getOldProjectValues(id, (getErr, rows) => {
     if (getErr) {
       console.error("Error fetching old project data:", getErr);
       return res.status(500).json({ success: false, error: "Database error" });
@@ -100,20 +87,15 @@ exports.updateProject = (req, res) => {
     const oldTitle = rows[0].title;
     const oldDesc = rows[0].description;
 
-    // Update with new values
-    const updateSql = "UPDATE projects SET title = ?, description = ? WHERE id = ?";
-    db.query(updateSql, [title, description, id], (updateErr, result) => {
+    Project.updateProject(id, title, description, (updateErr) => {
       if (updateErr) {
         console.error("Error updating project:", updateErr);
         return res.status(500).json({ success: false, error: "Database error" });
       }
 
-      // Insert log if userId is available
       if (userId) {
         const logMsg = `Updated project: title "${oldTitle}" → "${title}", description "${oldDesc}" → "${description}"`;
         addLog(id, userId, logMsg);
-      } else {
-        console.warn("No userId provided for project update log, skipping insert.");
       }
 
       res.json({ success: true });
@@ -124,8 +106,7 @@ exports.updateProject = (req, res) => {
 // Delete project
 exports.deleteProject = (req, res) => {
   const { id } = req.params;
-  const sql = "DELETE FROM projects WHERE id = ?";
-  db.query(sql, [id], (err, result) => {
+  Project.deleteProject(id, (err) => {
     if (err) {
       console.error("Error deleting project:", err);
       return res.status(500).json({ success: false, error: "Database error" });
