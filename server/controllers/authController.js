@@ -36,7 +36,6 @@ exports.login = (req, res) => {
       success: true,
       message: "Login successful",
       token,
-      user,
     });
   });
 };

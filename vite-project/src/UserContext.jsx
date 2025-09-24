@@ -11,16 +11,15 @@ export function UserProvider({ children }) {
     const token = localStorage.getItem("token");
 
     if (token) {
-      // Try to validate the token and fetch user info
-      axios.get(`${import.meta.env.VITE_BASE_URL}/api/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      axios
+        .get(`${import.meta.env.VITE_BASE_URL}/api/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
         .then((res) => {
-          setUser(res.data.user); // backend should return user info
+          setUser(res.data.user);
         })
         .catch(() => {
-          // invalid token or expired
-          localStorage.removeItem("token");
+          localStorage.removeItem("token"); // token expired or invalid
           setUser(null);
         })
         .finally(() => setLoading(false));
@@ -29,8 +28,26 @@ export function UserProvider({ children }) {
     }
   }, []);
 
+  const login = async (username, password) => {
+    const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/login`, { username, password });
+    if (res.data.success) {
+      localStorage.setItem("token", res.data.token);
+      // immediately fetch user
+      const userRes = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/me`, {
+        headers: { Authorization: `Bearer ${res.data.token}` },
+      });
+      setUser(userRes.data.user);
+    }
+    return res.data;
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+  };
+
   return (
-    <UserContext.Provider value={{ user, setUser, loading }}>
+    <UserContext.Provider value={{ user, setUser, login, logout, loading }}>
       {children}
     </UserContext.Provider>
   );
