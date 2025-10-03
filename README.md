@@ -20,7 +20,7 @@ In this Assessment I was provided an instruction which stacks to use for the dev
 
 Thanks to this assessment that I learned a lot in the process. 
 
-**NOTE:** If it says `connection error` or `server error` it means I lost free credits at railway. But it will refresh every month : D 
+**NOTE:** If it says `connection error` or `server error` wait a little bit since railway is sleeping. But if it doesn't work, it means I lost free credits at railway. But it will refresh every month : D 
 
 # Project overview
 Project Link: https://dg-assessment.vercel.app
